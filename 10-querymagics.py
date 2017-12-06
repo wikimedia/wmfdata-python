@@ -17,6 +17,7 @@ def try_decode(cell):
 def decode_data(d):
     return [{try_decode(key): try_decode(val) for key, val in item.items()} for item in d]
 
+# To-do: figure out how to use the `fmt` parameter when calling a magic
 @register_cell_magic
 def run_mariadb(line, cell, fmt = "pandas"):
     """Used to run an SQL query or command on the `analytics-store` MariaDB replica."""
@@ -49,7 +50,7 @@ def run_mariadb(line, cell, fmt = "pandas"):
         conn.close()
             
 
-# Running HQL code on Hive
+# To-do: figure out how to use the `fmt` parameter when calling a magic
 @register_cell_magic
 def run_hive(line, cell, fmt = "pandas"):
     """Used to run a Hive query or command on the Data Lake stored on the Analytics cluster."""
