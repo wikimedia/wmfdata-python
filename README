@@ -1,0 +1,1 @@
+This folder is symlinked into `~/.ipython/profile_default/startup`, so that its contents will be run when IPython starts up.
