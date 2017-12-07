@@ -18,7 +18,6 @@ def decode_data(d):
     return [{try_decode(key): try_decode(val) for key, val in item.items()} for item in d]
 
 
-# To-do: figure out how to use the `fmt` parameter when calling a magic
 def run_mariadb(*cmds, fmt = "pandas"):
     """
     Used to run an SQL query or command on the `analytics-store` MariaDB replica. 
@@ -31,6 +30,7 @@ def run_mariadb(*cmds, fmt = "pandas"):
 
     try:
         conn = pymysql.connect(
+            # To-do: We need to be able to query the EventLogging host too
             host = "analytics-store.eqiad.wmnet",
             read_default_file = '/etc/mysql/conf.d/research-client.cnf',
             charset = 'utf8mb4',
@@ -61,11 +61,13 @@ def run_mariadb(*cmds, fmt = "pandas"):
 
     finally:
         conn.close()
-        
+
+# To-do: figure out how to use the `fmt` parameter when calling a magic
 @register_cell_magic
 def mariadb(line, cell):
     return run_mariadb(cell)
             
+# To-do: allow for multiple commands as with `run_mariadb()`
 # To-do: figure out how to use the `fmt` parameter when calling a magic
 @register_cell_magic
 def run_hive(line, cell, fmt = "pandas"):
