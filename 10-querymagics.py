@@ -17,11 +17,14 @@ def try_decode(cell):
 def decode_data(d):
     return [{try_decode(key): try_decode(val) for key, val in item.items()} for item in d]
 
+
 # To-do: figure out how to use the `fmt` parameter when calling a magic
-@register_cell_magic
-def run_mariadb(line, cell, fmt = "pandas"):
-    """Used to run an SQL query or command on the `analytics-store` MariaDB replica."""
-    cmd = cell
+def run_mariadb(*cmds, fmt = "pandas"):
+    """
+    Used to run an SQL query or command on the `analytics-store` MariaDB replica. 
+    Multiple commands can be specified as multiple positional arguments, in which case only the result
+    from the final results-producing command will be returned.
+    """
 
     if fmt not in ["pandas", "raw"]:
         raise ValueError("The format should be either `pandas` or `raw`.")
@@ -35,21 +38,34 @@ def run_mariadb(line, cell, fmt = "pandas"):
             cursorclass=pymysql.cursors.DictCursor,
             autocommit = True
         )
-        if fmt == "pandas":
-            result = pd.read_sql_query(cmd, conn)
-            # Turn any binary data into strings
-            result = result.applymap(try_decode)
-        elif fmt == "raw":
-            cursor = conn.cursor()
-            cursor.execute(query)
-            result = cursor.fetchall()
-            result = decode_data(result)
+        
+        result = None
+        
+        # Overwrite the result during each iteration so only the last result is retured
+        for cmd in cmds:
+            if fmt == "raw":
+                cursor = conn.cursor()
+                cursor.execute(cmd)
+                result = cursor.fetchall()
+                result = decode_data(result)
+            else:
+                try:
+                    result = pd.read_sql_query(cmd, conn)
+                    # Turn any binary data into strings
+                    result = result.applymap(try_decode)
+                # pandas will encounter a TypeError with DDL (e.g. CREATE TABLE) or DML (e.g. INSERT) statements
+                except TypeError:
+                    pass
+
         return result
 
     finally:
         conn.close()
+        
+@register_cell_magic
+def mariadb(line, cell):
+    return run_mariadb(cell)
             
-
 # To-do: figure out how to use the `fmt` parameter when calling a magic
 @register_cell_magic
 def run_hive(line, cell, fmt = "pandas"):
