@@ -69,13 +69,13 @@ def mariadb(line, cell):
             
 # To-do: allow for multiple commands as with `run_mariadb()`
 # To-do: figure out how to use the `fmt` parameter when calling a magic
-@register_cell_magic
-def run_hive(line, cell, fmt = "pandas"):
+def run_hive(cmd, fmt = "pandas"):
     """Used to run a Hive query or command on the Data Lake stored on the Analytics cluster."""
-    cmd = cell
     
     if fmt not in ["pandas", "raw"]:
         raise ValueError("The format should be either `pandas` or `raw`.")
+    
+    result = None
     
     try:
         hive_conn = impala_conn(host='analytics1003.eqiad.wmnet', port=10000, auth_mechanism='PLAIN')
@@ -88,8 +88,13 @@ def run_hive(line, cell, fmt = "pandas"):
             except TypeError:
                 pass
         else:
-            result = hive_cursor.fetchall()
-        return result
-    
+            result = hive_cursor.fetchall()    
     finally:
         hive_conn.close()
+    
+    return result
+
+
+@register_cell_magic
+def hive(line, cell):
+    return run_hive(cell)
