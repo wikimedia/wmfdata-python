@@ -1,11 +1,7 @@
-# This file creates custom IPython magics for querying WMF databases.
-# For more details, see http://ipython.readthedocs.io/en/stable/config/custommagics.html
-
 import pandas as pd
 import pymysql
 from impala.dbapi import connect as impala_conn
 from impala.util import as_pandas
-from IPython.core.magic import register_cell_magic
 
 # Strings are stored in MariaDB as BINARY rather than CHAR/VARCHAR, so they need to be converted.
 def try_decode(cell):
@@ -62,10 +58,6 @@ def run_mariadb(*cmds, fmt = "pandas"):
     finally:
         conn.close()
 
-# To-do: figure out how to use the `fmt` parameter when calling a magic
-@register_cell_magic
-def mariadb(line, cell):
-    return run_mariadb(cell)
             
 # To-do: allow for multiple commands as with `run_mariadb()`
 # To-do: figure out how to use the `fmt` parameter when calling a magic
@@ -93,8 +85,3 @@ def run_hive(cmd, fmt = "pandas"):
         hive_conn.close()
     
     return result
-
-
-@register_cell_magic
-def hive(line, cell):
-    return run_hive(cell)
