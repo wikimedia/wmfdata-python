@@ -15,7 +15,7 @@ def decode_data(d):
     return [{try_decode(key): try_decode(val) for key, val in item.items()} for item in d]
 
 
-def run_mariadb(*cmds, fmt = "pandas"):
+def mariadb(*cmds, fmt = "pandas"):
     """
     Used to run an SQL query or command on the `analytics-store` MariaDB replica. 
     Multiple commands can be specified as multiple positional arguments, in which case only the result
@@ -60,9 +60,8 @@ def run_mariadb(*cmds, fmt = "pandas"):
         conn.close()
 
             
-# To-do: allow for multiple commands as with `run_mariadb()`
-# To-do: figure out how to use the `fmt` parameter when calling a magic
-def run_hive(cmd, fmt = "pandas"):
+# To-do: allow for multiple commands as with `mariadb()`
+def hive(cmd, fmt = "pandas"):
     """Used to run a Hive query or command on the Data Lake stored on the Analytics cluster."""
     
     if fmt not in ["pandas", "raw"]:
@@ -88,7 +87,7 @@ def run_hive(cmd, fmt = "pandas"):
     return result
 
 def list_all_wikis():
-    wikis = run_mariadb(
+    wikis = mariadb(
         """
         select site_global_key
         from enwiki.sites
@@ -106,7 +105,7 @@ def list_all_wikis():
 def list_wikis_by_group(*groups):
     groups_list = ", ".join(["'" + group + "'" for group in groups])
     
-    wikis = run_mariadb(
+    wikis = mariadb(
         """
         select site_global_key
         from enwiki.sites
@@ -125,7 +124,7 @@ def multiquery(*cmds, wikis = list_all_wikis()):
     for wiki in wikis:
         init = time.perf_counter()
         
-        part_result = run_mariadb(
+        part_result = mariadb(
             "use {db}".format(db = wiki),
             *cmds
         )
