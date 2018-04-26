@@ -1,5 +1,6 @@
 # Import submodules
-from . import query
+from . import hive
+from . import mariadb
 from . import utils
 
 # Direct reusers to package
