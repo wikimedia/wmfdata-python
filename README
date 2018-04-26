@@ -1,1 +1,1 @@
-This folder is symlinked into `~/.ipython/profile_default/startup`, so that its contents will be run when IPython starts up.
+This is a Python package containing convenience functions for working with [non-public Wikimedia data](https://wikitech.wikimedia.org/wiki/Analytics/Data_access#Production_access). It's most useful when working on [SWAP](https://wikitech.wikimedia.org/wiki/SWAP).
