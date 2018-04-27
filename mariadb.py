@@ -23,13 +23,19 @@ def run(*cmds, fmt = "pandas", host = "wikis"):
     from the final results-producing command will be returned.
     """
 
+    if host == "wikis":
+        full_host = "analytics-store.eqiad.wmnet"
+    elif host == "logs":
+        full_host = "analytics-slave.eqiad.wmnet"
+    else:
+        full_host = host
+    
     if fmt not in ["pandas", "raw"]:
         raise ValueError("The format should be either `pandas` or `raw`.")
 
     try:
         conn = mysql.connect(
-            # To-do: We need to be able to query the EventLogging host too
-            host = "analytics-store.eqiad.wmnet",
+            host = full_host,
             option_files = '/etc/mysql/conf.d/research-client.cnf',
             charset = 'binary',
             database ='staging',
