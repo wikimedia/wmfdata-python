@@ -68,7 +68,7 @@ def run(*cmds, fmt = "pandas", host = "wikis"):
     finally:
         conn.close()
 
-def multirun(*cmds, wikis = utils.list_all_wikis()):
+def multirun(*cmds, wikis = utils.list_wikis()):
     result = None
     
     for wiki in wikis:
