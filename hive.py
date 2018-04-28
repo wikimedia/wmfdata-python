@@ -1,8 +1,7 @@
-import pandas as pd
 from impala.dbapi import connect as impala_conn
-from impala.util import as_pandas
+from impala.util import as_pandas as impala_as_pd
             
-# To-do: allow for multiple commands as with `mariadb()`
+# To-do: allow for multiple commands as with `mariadb.run()`
 def run(cmd, fmt = "pandas"):
     """Used to run a Hive query or command on the Data Lake stored on the Analytics cluster."""
     
@@ -17,7 +16,7 @@ def run(cmd, fmt = "pandas"):
         hive_cursor.execute(cmd)
         if fmt == "pandas":
             try:
-                result = as_pandas(hive_cursor)
+                result = impala_as_pd(hive_cursor)
             # Happens if there are no results (as with an INSERT INTO query)
             except TypeError:
                 pass
