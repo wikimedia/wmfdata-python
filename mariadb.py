@@ -1,6 +1,9 @@
 import time
+
 import mysql.connector as mysql # `pip install mysql-connector-python`
 import pandas as pd
+
+from . import utils
 
 # Strings are stored in MariaDB as BINARY rather than CHAR/VARCHAR, so they need to be converted.
 def try_decode(cell):
@@ -64,40 +67,8 @@ def run(*cmds, fmt = "pandas", host = "wikis"):
 
     finally:
         conn.close()
-        
-def list_all_wikis():
-    wikis = run(
-        """
-        select site_global_key
-        from enwiki.sites
-        where site_group in
-            ('commons', 'incubator', 'foundation', 'mediawiki', 'meta', 'sources', 
-            'species','wikibooks', 'wikidata', 'wikinews', 'wikipedia', 'wikiquote',
-            'wikisource', 'wikiversity', 'wikivoyage', 'wiktionary') 
-        order by site_global_key asc
-        """, 
-        fmt = "raw"
-    )
-    
-    return [row[0] for row in wikis]
 
-def list_wikis_by_group(*groups):
-    groups_list = ", ".join(["'" + group + "'" for group in groups])
-    
-    wikis = run(
-        """
-        select site_global_key
-        from enwiki.sites
-        where site_group in
-            ({groups}) 
-        order by site_global_key asc
-        """.format(groups = groups_list), 
-        fmt = "raw"
-    )
-    
-    return [row[0] for row in wikis]
-
-def multirun(*cmds, wikis = list_all_wikis()):
+def multirun(*cmds, wikis = utils.list_all_wikis()):
     result = None
     
     for wiki in wikis:
@@ -114,6 +85,6 @@ def multirun(*cmds, wikis = list_all_wikis()):
             result = pd.concat([result, part_result], ignore_index = True)
         
         elapsed = time.perf_counter() - init
-        print_err("{} completed in {:0.0f} s".format(wiki, elapsed))
+        utils.print_err("{} completed in {:0.0f} s".format(wiki, elapsed))
         
     return result
