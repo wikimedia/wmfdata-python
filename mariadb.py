@@ -57,8 +57,9 @@ def run(*cmds, fmt = "pandas", host = "wikis"):
             else:
                 try:
                     result = pd.read_sql_query(cmd, conn)
-                    # Turn any binary data into strings
-                    result = result.applymap(try_decode)
+                    # Turn any binary data and column names into strings
+                    result = result.applymap(try_decode).rename(columns = try_decode)                  
+                    
                 # pandas will encounter a TypeError with DDL (e.g. CREATE TABLE) or DML (e.g. INSERT) statements
                 except TypeError:
                     pass
