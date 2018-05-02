@@ -1,0 +1,1 @@
+* Allow the `run()` to take files as arguments as well as strings
