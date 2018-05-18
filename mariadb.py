@@ -18,12 +18,15 @@ def decode_data(l):
         for t in l
     ]
 
-
-def run(*cmds, fmt = "pandas", host = "wikis"):
+def run(cmds, fmt = "pandas", host = "wikis"):
     """
-    Used to run an SQL query or command on the `analytics-store` MariaDB replica. 
-    Multiple commands can be specified as multiple positional arguments, in which case only the result
-    from the final results-producing command will be returned.
+    Used to run SQL queries or commands on the analytics MariaDB databases. 
+    A single command can be specified as a string and multiple commands as a list of strings.
+    
+    The host can be "wikis" to run on the wiki replicas and "logs" to run on the EventLogging host.
+    
+    The format can be "pandas", returning a Pandas data frame, or "raw", returning a list of tuples.
+    Running a single command returns the object; running multiple commands returns a list of objects.
     """
 
     if host == "wikis":
@@ -32,6 +35,9 @@ def run(*cmds, fmt = "pandas", host = "wikis"):
         full_host = "analytics-slave.eqiad.wmnet"
     else:
         full_host = host
+        
+    if type(cmds) == str:
+        cmds = [cmds]
     
     if fmt not in ["pandas", "raw"]:
         raise ValueError("The format should be either `pandas` or `raw`.")
@@ -45,9 +51,10 @@ def run(*cmds, fmt = "pandas", host = "wikis"):
             autocommit = True
         )
         
-        result = None
+        results = []
         
-        # Overwrite the result during each iteration so only the last result is retured
+        # It's valuable for this function to support multiple commands so that it's possible to run
+        # multiple commands within the same connection.
         for cmd in cmds:
             if fmt == "raw":
                 cursor = conn.cursor()
@@ -62,23 +69,28 @@ def run(*cmds, fmt = "pandas", host = "wikis"):
                     
                 # pandas will encounter a TypeError with DDL (e.g. CREATE TABLE) or DML (e.g. INSERT) statements
                 except TypeError:
-                    pass
+                    result = None
+            
+            
+            results.append(result)
 
-        return result
+        if len(results) == 1:
+            return results[0]
+        else:
+            return results
 
     finally:
         conn.close()
 
-def multirun(*cmds, wikis = utils.list_wikis()):
+def multirun(cmds, wikis = utils.list_wikis()):
     result = None
     
     for wiki in wikis:
         init = time.perf_counter()
         
-        part_result = run(
-            "use {db}".format(db = wiki),
-            *cmds
-        )
+        cmds.insert(0, "use {db}".format(db = wiki))
+
+        part_result = run(cmds)
         
         if result is None:
             result = part_result
