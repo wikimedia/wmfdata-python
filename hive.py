@@ -29,4 +29,7 @@ def run(cmds, fmt = "pandas"):
     finally:
         hive_conn.close()
     
-    return results
+    if len(results) == 1:
+        return results[0]
+    else:
+        return results
