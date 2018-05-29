@@ -1,4 +1,5 @@
 import sys
+from math import log10, floor
 
 from . import mariadb
 
@@ -34,3 +35,10 @@ def list_wikis(groups=["all"]):
     )
     
     return [row[0] for row in wikis]
+
+
+def sig_figs(x, n_figs):
+    exponent = floor(log10(abs(x)))
+    round_level = -exponent + (n_figs - 1)
+    return round(x, round_level)
+    
