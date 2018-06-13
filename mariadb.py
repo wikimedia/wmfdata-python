@@ -83,6 +83,9 @@ def run(cmds, fmt = "pandas", host = "wikis"):
         conn.close()
 
 def multirun(cmds, wikis = utils.list_wikis()):
+    if type(cmds) == str:
+        cmds = [cmds]
+    
     result = None
     
     for wiki in wikis:
