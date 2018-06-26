@@ -20,13 +20,15 @@ def decode_data(l):
 
 def run(cmds, fmt = "pandas", host = "wikis"):
     """
-    Used to run SQL queries or commands on the analytics MariaDB databases. 
-    A single command can be specified as a string and multiple commands as a list of strings.
+    Used to run SQL queries or commands on the analytics MariaDB replicas. 
     
-    The host can be "wikis" to run on the wiki replicas and "logs" to run on the EventLogging host.
+    A single command can be specified as a string or multiple commands as a list of strings.
+    
+    If multiple commands are provided, only the results from the final results-producing command are returned
+    
+    The host can be "wikis" to run on the wiki replicas or "logs" to run on the EventLogging host.
     
     The format can be "pandas", returning a Pandas data frame, or "raw", returning a list of tuples.
-    Running a single command returns the object; running multiple commands returns a list of objects.
     """
 
     if host == "wikis":
@@ -42,6 +44,8 @@ def run(cmds, fmt = "pandas", host = "wikis"):
     if fmt not in ["pandas", "raw"]:
         raise ValueError("The format should be either `pandas` or `raw`.")
 
+    result = None
+    
     try:
         conn = mysql.connect(
             host = full_host,
@@ -51,33 +55,31 @@ def run(cmds, fmt = "pandas", host = "wikis"):
             autocommit = True
         )
         
-        results = []
-        
         # It's valuable for this function to support multiple commands so that it's possible to run
         # multiple commands within the same connection.
         for cmd in cmds:
             if fmt == "raw":
                 cursor = conn.cursor()
                 cursor.execute(cmd)
-                result = cursor.fetchall()
-                result = decode_data(result)
+                try:
+                    result = cursor.fetchall()
+                    result = decode_data(result)
+                    
+                #mysql-connector-python will encounter an InterfaceError if there are no results to fetch
+                except mysql.errors.InterfaceError:
+                    pass
+
             else:
                 try:
                     result = pd.read_sql_query(cmd, conn)
                     # Turn any binary data and column names into strings
                     result = result.applymap(try_decode).rename(columns = try_decode)                  
-                    
+                
                 # pandas will encounter a TypeError with DDL (e.g. CREATE TABLE) or DML (e.g. INSERT) statements
                 except TypeError:
-                    result = None
-            
-            
-            results.append(result)
+                    pass
 
-        if len(results) == 1:
-            return results[0]
-        else:
-            return results
+        return result
 
     finally:
         conn.close()
@@ -91,9 +93,9 @@ def multirun(cmds, wikis = utils.list_wikis()):
     for wiki in wikis:
         init = time.perf_counter()
         
-        cmds.insert(0, "use {db}".format(db = wiki))
-
-        part_result = run(cmds)
+        use_cmd = ["use {db}".format(db = wiki)]
+        
+        part_result = run(use_cmd + cmds)
         
         if result is None:
             result = part_result
