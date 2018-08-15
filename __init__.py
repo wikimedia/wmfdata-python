@@ -1,7 +1,7 @@
 # Import submodules
+from . import charting
 from . import hive
 from . import mariadb
-from . import mpl
 from . import utils
 
 # Direct reusers to package
