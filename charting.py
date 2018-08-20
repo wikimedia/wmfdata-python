@@ -1,4 +1,4 @@
-import matplotlib as mpl
+from matplotlib import ticker
 
 mpl_style = {
     "font.size": 16,
@@ -13,6 +13,6 @@ def M_str(x, pos):
     n = int(round(x / 1000000))
     return "{n} M".format(n=n)
 
-pct_fmt = mpl.ticker.PercentFormatter(xmax=1)
-M_fmt = mpl.ticker.FuncFormatter(M_str)
-comma_fmt = mpl.ticker.StrMethodFormatter("{x:,.0f}")
+pct_fmt = ticker.PercentFormatter(xmax=1)
+M_fmt = ticker.FuncFormatter(M_str)
+comma_fmt = ticker.StrMethodFormatter("{x:,.0f}")
