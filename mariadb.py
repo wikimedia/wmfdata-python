@@ -29,6 +29,8 @@ def run(cmds, fmt = "pandas", host = "wikis"):
     The host can be "wikis" to run on the wiki replicas or "logs" to run on the EventLogging host.
     
     The format can be "pandas", returning a Pandas data frame, or "raw", returning a list of tuples.
+    
+    You must specify the database in the `from` clause of your SQL query; no database is selected by default.
     """
 
     if host == "wikis":
@@ -51,7 +53,6 @@ def run(cmds, fmt = "pandas", host = "wikis"):
             host = full_host,
             option_files = '/etc/mysql/conf.d/research-client.cnf',
             charset = 'binary',
-            database ='staging',
             autocommit = True
         )
         
