@@ -4,6 +4,6 @@ setup(
     name="wmfdata",
     version="0.1",
     description="Tools for analyzing data on SWAP, a platform for confidential Wikimedia data",
-    install_requires=["pandas", "impyla", "mysql-connector-python"],
+    install_requires=["pandas", "impyla", "mysql-connector-python", "matplotlib"],
     python_requires=">=3"
 )
