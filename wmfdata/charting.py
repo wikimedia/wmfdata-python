@@ -1,3 +1,4 @@
+import matplotlib as mpl
 from matplotlib import ticker
 
 mpl_style = {
@@ -8,6 +9,9 @@ mpl_style = {
     "axes.xmargin": 0,
     "axes.ymargin": 0
 }
+
+def set_mpl_style():
+    mpl.style.use(mpl_style)
     
 def M_str(x, pos):
     n = int(round(x / 1000000))
