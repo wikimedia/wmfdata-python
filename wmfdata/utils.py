@@ -2,6 +2,7 @@ import sys
 from math import log10, floor
 
 from . import mariadb
+import pandas as pd
 
 def print_err(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
@@ -41,4 +42,15 @@ def sig_figs(x, n_figs):
     exponent = floor(log10(abs(x)))
     round_level = -exponent + (n_figs - 1)
     return round(x, round_level)
+
+def pct_str(x, sig_figs=2):
+    rounded = round(x, sig_figs)
+    
+def pd_display_all(df):
+    with pd.option_context(
+        "display.max_rows", None, 
+        "display.max_columns", None,
+        "display.max_colwidth", -1,
+    ):
+        display(df)
     
