@@ -13,7 +13,7 @@ def run(cmds, fmt = "pandas"):
     results = []
     
     try:
-        hive_conn = impala_conn(host='analytics1003.eqiad.wmnet', port=10000, auth_mechanism='PLAIN')
+        hive_conn = impala_conn(host='an-coord1001.eqiad.wmnet', port=10000, auth_mechanism='PLAIN')
         hive_cursor = hive_conn.cursor()
         
         for cmd in cmds:
