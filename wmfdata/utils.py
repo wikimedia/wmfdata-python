@@ -43,8 +43,9 @@ def sig_figs(x, n_figs):
     round_level = -exponent + (n_figs - 1)
     return round(x, round_level)
 
-def pct_str(x, sig_figs=2):
-    rounded = round(x, sig_figs)
+def pct_str(x, decimals=1):
+    format_str = "{:,." + str(decimals) + "f}%"
+    return format_str.format(x * 100)
     
 def pd_display_all(df):
     with pd.option_context(
