@@ -2,7 +2,11 @@ from impala.dbapi import connect as impala_conn
 from impala.util import as_pandas as impala_as_pd
             
 def run(cmds, fmt = "pandas"):
-    """Used to run a Hive query or command on the Data Lake stored on the Analytics cluster."""
+    """
+    Run one or more Hive queries or command on the Data Lake.
+    
+    If multiple commands are provided, only results from the last results-producing command will be returned.
+    """
     
     if fmt not in ["pandas", "raw"]:
         raise ValueError("The format should be either `pandas` or `raw`.")
@@ -10,7 +14,7 @@ def run(cmds, fmt = "pandas"):
     if type(cmds) == str:
         cmds = [cmds]
     
-    results = []
+    result = None
     
     try:
         hive_conn = impala_conn(host='an-coord1001.eqiad.wmnet', port=10000, auth_mechanism='PLAIN')
@@ -20,16 +24,13 @@ def run(cmds, fmt = "pandas"):
             hive_cursor.execute(cmd)
             if fmt == "pandas":
                 try:
-                    results.append(impala_as_pd(hive_cursor))
+                    result = impala_as_pd(hive_cursor)
                 # Happens if there are no results (as with an INSERT INTO query)
                 except TypeError:
-                    results.append(None)
+                    pass
             else:
-                results.append(hive_cursor.fetchall()) 
+                result = hive_cursor.fetchall()
     finally:
         hive_conn.close()
     
-    if len(results) == 1:
-        return results[0]
-    else:
-        return results
+    return result
