@@ -1,4 +1,4 @@
-import sys
+wimport sys
 from math import log10, floor
 
 from . import mariadb
@@ -55,3 +55,9 @@ def pd_display_all(df):
     ):
         display(df)
     
+def mediawiki_dt(dt):
+    """
+    Converts a Python datetime.datetime object to the string datetime form
+    used in MediaWiki databases.
+    """
+    return dt.strftime("%Y%m%d%H%M%S")
