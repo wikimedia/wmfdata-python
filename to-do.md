@@ -1,4 +1,5 @@
-* Allow the `run()` functions to:
- * take files as arguments as well as strings
- * save output directly to a TSV file, without the intermediate Pandas dataframe step
- * print runtime and current time after executing
+* Change `run()` functions to:
+  * accept file paths as arguments as well as strings
+  * save output directly to a data file, without the intermediate Pandas dataframe step
+  * automatically log generation datetime, calculation duration, data sample, and data info
+* Add a utility to convert between various date representations (MediaWiki, Hive, etc)
