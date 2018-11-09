@@ -1,4 +1,4 @@
-wimport sys
+import sys
 from math import log10, floor
 
 from . import mariadb
