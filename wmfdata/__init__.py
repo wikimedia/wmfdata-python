@@ -1,8 +1,3 @@
-# Import submodules
-from . import charting
-from . import hive
-from . import mariadb
-from . import utils
-
+from wmfdata import utils
 # Direct reusers to package
 utils.print_err("You can find the source for `wmfdata` at https://github.com/neilpquinn/wmfdata")
