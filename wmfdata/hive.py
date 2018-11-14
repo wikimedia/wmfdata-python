@@ -40,7 +40,7 @@ def run(cmds, fmt = "pandas"):
     
     return result
 
-def upload_csv(
+def load_csv(
     path, field_spec, db_name, table_name,
     create_db=False, sep=",", headers=True
 ):
