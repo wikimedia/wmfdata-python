@@ -7,7 +7,6 @@ import pandas as pd
 def print_err(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
 
-
 def sig_figs(x, n_figs):
     exponent = floor(log10(abs(x)))
     round_level = -exponent + (n_figs - 1)
@@ -16,6 +15,10 @@ def sig_figs(x, n_figs):
 def pct_str(x, decimals=1):
     format_str = "{:,." + str(decimals) + "f}%"
     return format_str.format(x * 100)
+
+def num_str(x, n_figs=2):
+    sigfigified = sig_figs(x, n_figs)
+    return "{:,}".format(sigfigified)
     
 def pd_display_all(df):
     with pd.option_context(
