@@ -72,6 +72,7 @@ def load_csv(
         db_name=db_name
     )
     
+    # To do: Passing a new field spec cannot change an exsting table's format
     create_table_cmd = """
     create table if not exists {db_name}.{table_name} ({field_spec})
     row format delimited fields terminated by "{sep}"
@@ -84,6 +85,7 @@ def load_csv(
         load data local inpath "{path}"
         overwrite into table {db_name}.{table_name}
     """.format(
+        # To do: Convert relative paths (e.g. "~/data.csv") into absolute paths
         path=path, db_name=db_name,
         table_name=table_name
     )
