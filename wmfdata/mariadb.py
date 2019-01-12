@@ -102,14 +102,58 @@ def list_wikis(groups=["all"]):
     
     groups_list = ", ".join(["'" + group + "'" for group in groups])
     
+    # We need to remove deleted wikis from queries because their tables are not updated
+    # and can have old schemas, producing errors when correct queries are run.
+    deleted_wikis = (
+        "alswikibooks",
+        "alswikiquote",
+        "alswiktionary",
+        "bawiktionary",
+        "chwikimedia",
+        "closed_zh_twwiki",
+        "comcomwiki",
+        "de_labswikimedia",
+        "dkwiki",
+        "dkwikibooks",
+        "dkwiktionary",
+        "en_labswikimedia",
+        "flaggedrevs_labswikimedia",
+        "langcomwiki",
+        "liquidthreads_labswikimedia",
+        "mowiki",
+        "mowiktionary",
+        "noboardwiki",
+        "nomcomwiki",
+        "readerfeedback_labswikimedia",
+        "rel13testwiki",
+        "ru_sibwiki",
+        "sep11wiki",
+        "strategyappswiki",
+        "tlhwiki",
+        "tlhwiktionary",
+        "tokiponawiki",
+        "tokiponawikibooks",
+        "tokiponawikiquote",
+        "tokiponawikisource",
+        "tokiponawiktionary",
+        "ukwikimedia",
+        "vewikimedia",
+        "zh_cnwiki",
+        "zh_twwiki"
+    )
+    
     wikis = run(
         """
         select site_global_key
         from enwiki.sites
-        where site_group in
-            ({groups}) 
+        where
+            site_group in ({groups}) and
+            site_global_key not in {deleted_wikis}
         order by site_global_key asc
-        """.format(groups = groups_list), 
+        """.format(
+            groups = groups_list,
+            deleted_wikis = repr(deleted_wikis)
+        ), 
         fmt = "raw"
     )
     
