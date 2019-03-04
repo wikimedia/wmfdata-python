@@ -1,7 +1,6 @@
 import sys
 from math import log10, floor
 
-from wmfdata import mariadb
 import pandas as pd
 
 def print_err(*args, **kwargs):
