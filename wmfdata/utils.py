@@ -17,8 +17,11 @@ def pct_str(x, decimals=1):
     return format_str.format(x * 100)
 
 def num_str(x, n_figs=2):
-    sigfigified = sig_figs(x, n_figs)
-    return "{:,}".format(sigfigified)
+    try:
+        sigfigified = sig_figs(x, n_figs)
+        return "{:,}".format(sigfigified)
+    except (ValueError, TypeError): # Catch numpy.NaNs and Nones
+        return None
     
 def pd_display_all(df):
     with pd.option_context(
