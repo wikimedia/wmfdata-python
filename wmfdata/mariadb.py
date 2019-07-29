@@ -2,7 +2,6 @@ import atexit
 from collections import namedtuple
 from itertools import chain
 import subprocess
-import time
 
 import mysql.connector as mysql # https://pypi.org/project/mysql-connector-python/
 import pandas as pd
@@ -12,7 +11,7 @@ from wmfdata.utils import print_err
 # Close any open connections at exit
 @atexit.register
 def clean_up_connection():
-    # The connection variable may not be define if the connection failed to open
+    # The connection variable may not be defined if the connection failed to open
     if connection:
         connection.close()
 
@@ -32,7 +31,7 @@ def try_decode(cell):
     except AttributeError:
         return cell
 
-# To-do: generalize this to handle any nested data structures (e.g. for use on the column names in run_to_tupes)
+# To-do: generalize this to handle any nested data structures (e.g. for use on the column names in run_to_tuples)
 def decode_data(l):
     return [
         tuple(try_decode(v) for v in t) 
@@ -189,21 +188,3 @@ def multirun(cmds, wikis = None):
         raise NotImplementedError("The default set of wikis to run the command on have been removed. Please explicitly specify a list of wikis.")
     
     return run(cmds, wikis)
-#     result = None
-    
-#     for db in dbs:
-#         init = time.perf_counter()
-        
-#         use_cmd = ["use {db}".format(db = wiki)]
-        
-#         part_result = run(use_cmd + commands)
-        
-#         if result is None:
-#             result = part_result
-#         else:
-#             result = pd.concat([result, part_result], ignore_index = True)
-        
-#         elapsed = time.perf_counter() - init
-#         utils.print_err("{} completed in {:0.0f} s".format(wiki, elapsed))
-        
-#     return result
