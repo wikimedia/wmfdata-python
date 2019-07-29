@@ -54,11 +54,11 @@ def connect(db, use_x1=False):
         universal_newlines=True
     ).stdout.strip().split(":")
     
+    if host == ['']:
+        raise ValueError("The database '{}' was not found.".format(db))
+    
     port = host[1]
     host = host[0]
-    
-    if host == '':
-        raise ValueError("The database you requested was not found.")
         
     connection = mysql.connect(
         host=host,
