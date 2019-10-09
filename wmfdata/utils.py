@@ -2,7 +2,9 @@ import sys
 from math import log10, floor
 import re
 
+from IPython.display import HTML
 import pandas as pd
+
 
 def print_err(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
@@ -30,6 +32,37 @@ def pd_display_all(df):
         "display.max_colwidth", -1,
     ):
         display(df)
+        
+def insert_code_toggle():
+    """
+    Outputs a button that will show or hide the code cells in exported HTML versions of the notebook.
+    """
+    
+    # Based on a StackOverflow answer by harshil: https://stackoverflow.com/a/28073228/2509972
+    display(HTML("""
+    <form action="javascript:code_toggle()">
+        <input id="code_toggle" type="submit" value="Hide code" style="font-size: 1.4em">
+    </form>
+    
+    <script>
+    code_shown = true; 
+
+    function code_toggle() {
+        if (code_shown) {
+            $('div.input, div.output_prompt').hide();
+            $('#code_toggle').attr("value", "Show code");
+
+        } else {
+            $('div.input, div.output_pr').show();
+            $('#code_toggle').attr("value", "Hide code");
+        }
+
+        code_shown = !code_shown
+    }
+
+    $(document).ready(code_toggle);
+    </script>
+    """))
     
 def mediawiki_dt(dt):
     """
