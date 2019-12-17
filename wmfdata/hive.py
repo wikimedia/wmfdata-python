@@ -18,6 +18,11 @@ def run(cmds, fmt = "pandas"):
     
     if type(cmds) == str:
         cmds = [cmds]
+
+    # Check whether user has authenticated with Kerberos:
+    klist = subprocess.call("klist")
+    if klist == 1:
+        raise OSError("Authenticate with Kerberos using kinit or run as keytab-enabled user.")
     
     result = None
     
