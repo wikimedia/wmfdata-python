@@ -9,6 +9,12 @@ If you have Python installed, you should be able to install the latest version o
 pip install git+https://github.com/neilpquinn/wmfdata.git
 ```
 
+## Upgrading
+If you have an older version of wmfdata and want to upgrade to the latest, simply add the `--upgrade` flag to the command, resulting in the following:
+```
+pip install --upgrade git+https://github.com/neilpquinn/wmfdata.git
+```
+
 ## Support and bug reports
 If you have issues or general feedback, please contact [Neil Patel Quinn](https://meta.wikimedia.org/wiki/User:Neil_P._Quinn-WMF). If you're ready to file a specific bug report or feature request, please use [this Wikimedia Phabricator link](https://phabricator.wikimedia.org/maniphest/task/edit/form/1/?tags=product-analytics&subscribers=Neil_P._Quinn_WMF) to file a task with the tag `product-analytics` and the subscriber `Neil_P._Quinn_WMF`.
 
