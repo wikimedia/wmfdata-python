@@ -23,6 +23,8 @@ def run(cmds, fmt = "pandas"):
     klist = subprocess.call("klist")
     if klist == 1:
         raise OSError("Authenticate with Kerberos using kinit or run as keytab-enabled user.")
+    elif klist != 0:
+        raise OSError("Unknown issue checking Kerberos credentials.")
     
     result = None
     
