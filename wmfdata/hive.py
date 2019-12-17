@@ -22,7 +22,10 @@ def run(cmds, fmt = "pandas"):
     result = None
     
     try:
-        hive_conn = impala_conn(host='an-coord1001.eqiad.wmnet', port=10000, auth_mechanism='PLAIN')
+        hive_conn = impala_conn(host='an-coord1001.eqiad.wmnet',
+                                port=10000,
+                                auth_mechanism='GSSAPI',
+                                kerberos_service_name='hive')
         hive_cursor = hive_conn.cursor()
         
         for cmd in cmds:
