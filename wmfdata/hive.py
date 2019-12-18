@@ -14,7 +14,7 @@ def run(cmds, fmt = "pandas"):
     """
     
     if fmt not in ["pandas", "raw"]:
-        raise ValueError("The format should be either `pandas` or `raw`.")
+        raise ValueError("The `fmt` should be either `pandas` or `raw`.")
     
     if type(cmds) == str:
         cmds = [cmds]
@@ -22,9 +22,12 @@ def run(cmds, fmt = "pandas"):
     # Check whether user has authenticated with Kerberos:
     klist = subprocess.call("klist")
     if klist == 1:
-        raise OSError("Authenticate with Kerberos using kinit or run as keytab-enabled user.")
+        raise OSError(
+            "You do not have Kerberos credentials. " +
+            "Authenticate using `kinit` or run your script as a keytab-enabled user."
+        )
     elif klist != 0:
-        raise OSError("Unknown issue checking Kerberos credentials.")
+        raise OSError("There was an unknown issue checking your Kerberos credentials.")
     
     result = None
     
