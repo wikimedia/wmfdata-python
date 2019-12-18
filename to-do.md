@@ -5,6 +5,7 @@
 * Update `hive.run()` to:
     * Include column names in tuple format
     * Accept `date_col` and `index_col` parameters
+    * Potentially, use pyspark instead of impyla (Andrew Otto recommeds it)
 * Add a utility for fetching lists of wikis (e.g. for passing multiple databases to `mariadb.run()`)
 * Add a utility to convert between various date representations (MediaWiki, Hive, etc)
 * Update `hive.load_csv` to drop the table if it already exists, so the passed fieldspec is always used
