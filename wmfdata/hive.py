@@ -32,9 +32,10 @@ def hive_cli(query, heap_size = 1024, use_nice = True, use_ionice = True):
 
     results = None
     try:
-        # Create temporary files to write to:
-        query_fd, query_path = tempfile.mkstemp(suffix=".hql")
-        results_fd, results_path = tempfile.mkstemp(suffix=".tsv")
+        # Create temporary files in current working directory to write to:
+        cwd = os.getcwd()
+        query_fd, query_path = tempfile.mkstemp(suffix=".hql", dir=cwd)
+        results_fd, results_path = tempfile.mkstemp(suffix=".tsv", dir=cwd)
 
         # Write the Hive query:
         with os.fdopen(query_fd, 'w') as fp:
@@ -42,8 +43,8 @@ def hive_cli(query, heap_size = 1024, use_nice = True, use_ionice = True):
 
         # Execute the Hive query:
         cmd = cmd.format(heap_size, query_path, results_path)
-        hive_call = subprocess.call(cmd)
-        if hive_call = 0:
+        hive_call = subprocess.run(cmd, shell=True)
+        if hive_call.returncode == 0:
             # Read the results upon successful execution of cmd:
             results = pd.read_csv(results_path, sep='\t')
     finally:
