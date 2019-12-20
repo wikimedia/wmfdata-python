@@ -10,10 +10,14 @@ import os
 import tempfile
 import pandas as pd
 
-def hive_cli(query, heap_size = 1024, use_nice = True, use_ionice = True):
+def hive_cli(query, fmt = "pandas", heap_size = 1024, use_nice = True, use_ionice = True):
     """
     Run a query using the Hive command line interface
     """
+
+    if fmt not in ["pandas", "raw"]:
+        raise ValueError("The `fmt` should be either `pandas` or `raw`.")
+
     cmd = "export HADOOP_HEAPSIZE={0} && "
 
     if use_nice:
@@ -46,7 +50,12 @@ def hive_cli(query, heap_size = 1024, use_nice = True, use_ionice = True):
         hive_call = subprocess.run(cmd, shell=True)
         if hive_call.returncode == 0:
             # Read the results upon successful execution of cmd:
-            results = pd.read_csv(results_path, sep='\t')
+            if fmt == "pandas":
+                results = pd.read_csv(results_path, sep='\t')
+            else:
+                # If user requested "raw" results, read the text file as-is:
+                with open(results_path, 'r') as file:
+                    results = file.read()
     finally:
         # Cleanup:
         os.unlink(query_path)
@@ -106,9 +115,14 @@ def run(cmds, fmt = "pandas", via = "impala"):
             hive_conn.close()
     else:
         for cmd in cmds:
-            r = hive_cli(cmd)
+            r = hive_cli(cmd, fmt)
             if result is not None and r is not None:
-                result.append(r)
+                if fmt == "pandas":
+                    # Append fetched DataFrame to existing DataFrame:
+                    result.append(r)
+                else:
+                    # Append fetched raw text to existing raw text:
+                    result += r
             else:
                 result = r
 
