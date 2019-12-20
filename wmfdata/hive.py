@@ -17,12 +17,12 @@ def hive_cli(query, heap_size = 1024, use_nice = True, use_ionice = True):
     cmd = "export HADOOP_HEAPSIZE={0} && "
 
     if use_nice:
-        cmd += "nice "
+        cmd += "/usr/bin/nice "
 
     if use_ionice:
-        cmd += "ionice "
+        cmd += "/usr/bin/ionice "
 
-    cmd += "hive -S -f {1} 2> /dev/null"
+    cmd += "/usr/bin/hive -S -f {1} 2> /dev/null"
 
     filters = ["JAVA_TOOL_OPTIONS", "parquet.hadoop", "WARN:", ":WARN"]
     for filter in filters:
@@ -43,9 +43,9 @@ def hive_cli(query, heap_size = 1024, use_nice = True, use_ionice = True):
         # Execute the Hive query:
         cmd = cmd.format(heap_size, query_path, results_path)
         hive_call = subprocess.call(cmd)
-
-        # Read the results:
-        results = pd.read_csv(results_path, sep='\t')
+        if hive_call = 0:
+            # Read the results upon successful execution of cmd:
+            results = pd.read_csv(results_path, sep='\t')
     finally:
         # Cleanup:
         os.unlink(query_path)
