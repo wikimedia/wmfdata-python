@@ -7,14 +7,12 @@ setup(
     version=__version__,
     description="Tools for analyzing data on SWAP, a platform for confidential Wikimedia data",
     install_requires=[
-        "findspark",
         "impyla",
         "IPython",
         "matplotlib>=2.1",  # 2.1 introduced ticker.PercentFormatter
         "mysql-connector-python",
         "pandas",
         "packaging",
-        "pyspark",
         "requests",
         "thrift-sasl==0.2.1",  # impyla can't connect properly to Hive with a later version
     ],
