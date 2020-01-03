@@ -17,7 +17,7 @@ if remote['is_newer']:
     """
     update_message = update_message.format(__version__, remote['version'], url_extra)
 else:
-    update_message = "You are using the latest version of wmfdata (v{0}).".format(__version__)
+    update_message = "You are using version {0} of wmfdata (latest).".format(__version__)
 
 welcome_message = welcome_message.format(update_message, __source__)
 utils.print_err(welcome_message)
