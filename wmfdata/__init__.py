@@ -8,7 +8,7 @@ welcome_message = """{0}
 
 You can find the source for `wmfdata` at {1}"""
 
-branch = "check-update"  # change to "master" once in production
+branch = "master"
 remote = utils.check_remote_version(__version__, branch)
 if remote['is_newer']:
     url_extra = "" if branch == "master" else "@{0}".format(branch)
