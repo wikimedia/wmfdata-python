@@ -8,14 +8,13 @@ welcome_message = """{0}
 
 You can find the source for `wmfdata` at {1}"""
 
-branch = "check-update"
+branch = "check-update"  # change to "master" once in production
 remote = utils.check_remote_version(__version__, branch)
 if remote['is_newer']:
     url_extra = "" if branch == "master" else "@{0}".format(branch)
     update_message = """You are using wmfdata version {0}. A newer version is available.
-    Update to version {1} via: pip install --upgrade git+https://github.com/neilpquinn/wmfdata.git{2}
-    """
-    update_message = update_message.format(__version__, remote['version'], url_extra)
+Update to version {1} via: pip install --upgrade git+{2}/wmfdata.git{3}"""
+    update_message = update_message.format(__version__, remote['version'], __source__, url_extra)
 else:
     update_message = "You are using version {0} of wmfdata (latest).".format(__version__)
 
