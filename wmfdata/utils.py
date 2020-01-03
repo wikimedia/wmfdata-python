@@ -1,10 +1,11 @@
 import sys
 from math import log10, floor
 import re
+import requests
+from packaging import version
 
 from IPython.display import HTML
 import pandas as pd
-
 
 def print_err(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
@@ -93,3 +94,14 @@ def df_to_remarkup(df):
     remarkup_table = remarkup_table.replace("\n", "\n" + header_sep + "\n", 1)
     
     print(remarkup_table)
+
+def check_remote_version(local_version, remote_branch="master"):
+    url = "https://raw.githubusercontent.com/neilpquinn/wmfdata/{0}/wmfdata/__init__.py"
+    url = url.format(remote_branch)
+    r = requests.get(url)
+    remote_version = re.search('(([0-9]+\\.?){2,3})', r.text.split("\n")[0]).group(0)
+    d = {
+        'version': remote_version,
+        'is_newer': version.parse(remote_version) > version.parse(local_version)
+    }
+    return d
