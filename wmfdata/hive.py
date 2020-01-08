@@ -5,7 +5,7 @@ import subprocess
 from wmfdata.utils import print_err, mediawiki_dt
 from wmfdata.spark import get_spark_session
 
-def run(cmds, fmt = "pandas", spark_master='local', app_name='wmfdata', spark_config={}):
+def run(cmds, fmt = "pandas", spark_master='yarn', app_name='wmfdata', spark_config={}):
     """
     Run one or more Hive queries or command on the Data Lake.
 

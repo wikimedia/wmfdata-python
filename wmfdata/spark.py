@@ -10,7 +10,7 @@ import os
 
 
 
-def get_spark_session(master='local', app_name='wmfdata', spark_config={}):
+def get_spark_session(master='yarn', app_name='wmfdata', spark_config={}):
     """
     Returns an existent SparkSession, or a new one if one hasn't yet been created.
     """
