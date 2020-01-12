@@ -21,22 +21,6 @@ def ensure_list(str_or_list):
         return [str_or_list]
     else:
         return str_or_list
-    
-
-# Strings are stored in MariaDB as BINARY rather than CHAR/VARCHAR, so they need to be converted.
-# To-do: move these decode functions to the utils module
-def try_decode(cell):
-    try:
-        return cell.decode(encoding = "utf-8")
-    except AttributeError:
-        return cell
-
-# To-do: generalize this to handle any nested data structures (e.g. for use on the column names in run_to_tuples)
-def decode_data(l):
-    return [
-        tuple(try_decode(v) for v in t) 
-        for t in l
-    ]
 
 def connect(db, use_x1=False):
     # The `analytics-mysql` script requires users to know that the `wikishared` database is located on x1.
@@ -65,7 +49,7 @@ def connect(db, use_x1=False):
         port=port,
         db=db,
         option_files='/etc/mysql/conf.d/research-client.cnf',
-        charset='binary',
+        charset='utf8',
         autocommit=True
     )
     
@@ -74,26 +58,19 @@ def connect(db, use_x1=False):
 def run_to_pandas(connection, commands, date_col=None, index_col=None):
     result = None
     
+    # Specify the MediaWiki date format for each of the date_cols, if any
+    if date_col:
+        date_col = ensure_list(date_col)
+        date_format = "%Y%m%d%H%M%S"
+        date_col = {col: date_format for col in date_col}
+    
     # To-do: SQL syntax errors cause a chain of multiple Python errors
     for command in commands:
         try:
-            result = pd.read_sql_query(command, connection)
+            result = pd.read_sql_query(command, connection, index_col=index_col, parse_dates=date_col)
         # pandas will encounter a TypeError with DDL (e.g. CREATE TABLE) or DML (e.g. INSERT) statements
         except TypeError:
             pass
-    
-    # Turn any binary data and column names into strings
-    result = result.applymap(try_decode).rename(columns = try_decode)
-    
-    # We can't use the parse_dates argument of pd.read_sql_query because at that point the columns are still binary
-    date_col = ensure_list(date_col)
-    if date_col:
-        for col in date_col:
-            result[col] = pd.to_datetime(result[col], format="%Y%m%d%H%M%S")
-            
-    # Similarly, we can't use the index_col argument
-    if index_col:
-        result = result.set_index(index_col)
 
     return result
 
@@ -107,8 +84,8 @@ def run_to_tuples(connection, commands):
     for command in commands:
         cursor.execute(command)
         if cursor.with_rows:
-            records = decode_data(cursor.fetchall())
-            column_names = [x[0].decode(encoding = "utf-8") for x in cursor.description]
+            records = cursor.fetchall()
+            column_names = [x[0] for x in cursor.description]
             result = ResultSet(column_names, records)
 
     return result
