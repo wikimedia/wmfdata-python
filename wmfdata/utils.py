@@ -95,9 +95,8 @@ def df_to_remarkup(df):
     
     print(remarkup_table)
 
-def check_remote_version(local_version, remote_branch="master"):
-    url = "https://raw.githubusercontent.com/neilpquinn/wmfdata/{0}/wmfdata/__init__.py"
-    url = url.format(remote_branch)
+def check_remote_version(local_version):
+    url = "https://raw.githubusercontent.com/neilpquinn/wmfdata/release/wmfdata/__init__.py"
     r = requests.get(url)
     remote_version = re.search('(([0-9]+\\.?){2,3})', r.text.split("\n")[0]).group(0)
     d = {
