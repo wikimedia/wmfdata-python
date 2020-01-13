@@ -1,4 +1,4 @@
-__version__ = "0.1.1"
+__version__ = "0.1.0"
 __source__ = "https://github.com/neilpquinn/wmfdata"
 
 # Import all submodules so all are accessible after `import wmfdata`
