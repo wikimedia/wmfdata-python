@@ -10,7 +10,7 @@ import os
 
 
 
-def get_spark_session(master='yarn', app_name='wmfdata', spark_config={}):
+def get_session(master='yarn', app_name='wmfdata', spark_config={}):
     """
     Returns an existent SparkSession, or a new one if one hasn't yet been created.
     """
@@ -32,5 +32,5 @@ def get_spark_session(master='yarn', app_name='wmfdata', spark_config={}):
     for k, v in spark_config.items():
         builder.config(k, v)
 
-    spark = builder.getOrCreate()
-    return spark
+    session = builder.getOrCreate()
+    return session

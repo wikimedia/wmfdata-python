@@ -3,7 +3,7 @@ from shutil import copyfileobj
 import subprocess
 
 from wmfdata.utils import print_err, mediawiki_dt
-from wmfdata.spark import get_spark_session
+from wmfdata import spark
 
 def run(cmds, fmt = "pandas", spark_master='yarn', app_name='wmfdata', spark_config={}):
     """
@@ -30,12 +30,12 @@ def run(cmds, fmt = "pandas", spark_master='yarn', app_name='wmfdata', spark_con
 
     result = None
 
-    spark = get_spark_session(spark_master, app_name, spark_config)
+    spark_session = spark.get_session(spark_master, app_name, spark_config)
 
     # TODO figure out how to handle multiple commands
 
     cmd = cmds[0]
-    resultDf = spark.sql(cmd)
+    resultDf = spark_session.sql(cmd)
     if fmt == 'pandas':
         return resultDf.toPandas()
     else:
