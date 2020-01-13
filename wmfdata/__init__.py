@@ -11,8 +11,8 @@ You can find the source for `wmfdata` at {1}"""
 remote = utils.check_remote_version(__version__)
 if remote['is_newer']:
     update_message = """You are using wmfdata {0}. A newer version is available.
-Update to {1} via: pip install --upgrade git+{2}/wmfdata.git
-To see what changed refer to https://github.com/neilpquinn/wmfdata/CHANGELOG.md"""
+You can update to {1} by running `pip install --upgrade git+{2}/wmfdata.git@release`
+To see what has changed, refer to https://github.com/neilpquinn/wmfdata/CHANGELOG.md"""
     update_message = update_message.format(__version__, remote['version'], __source__)
 else:
     update_message = "You are using wmfdata {0} (latest).".format(__version__)
