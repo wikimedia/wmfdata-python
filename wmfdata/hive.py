@@ -35,11 +35,16 @@ def run(cmds, fmt = "pandas", spark_master='yarn', app_name='wmfdata', spark_con
     # TODO figure out how to handle multiple commands
 
     cmd = cmds[0]
-    resultDf = spark_session.sql(cmd)
+    spark_result = spark_session.sql(cmd)
+    collected_result = None
+    
     if fmt == 'pandas':
-        return resultDf.toPandas()
+        collected_result = spark_result.toPandas()
     else:
-        return resultDf.collect()
+        collected_result = spark_result.collect()
+    
+    spark.start_session_timeout(spark_session)
+    return collected_result
 
     # for cmd in cmds:
     #     resultDf = spark.sql(cmd)
@@ -50,8 +55,6 @@ def run(cmds, fmt = "pandas", spark_master='yarn', app_name='wmfdata', spark_con
     #             pass
     #     else:
     #         result = hive_cursor.fetchall()
-
-
 
 def load_csv(
     path, field_spec, db_name, table_name,
