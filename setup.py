@@ -1,10 +1,14 @@
 from setuptools import setup, find_packages
 
-from wmfdata import __version__
+# Load the contents of the metadata module without using import, since importing requires all dependencies
+# to be available and at this point pip hasn't checked them yet.
+metadata = {}
+with open("wmfdata/metadata.py") as file:
+    exec(file.read(), metadata)
 
 setup(
     name="wmfdata",
-    version=__version__,
+    version = metadata["version"],
     description="Tools for analyzing data on SWAP, a platform for confidential Wikimedia data",
     install_requires=[
         "impyla",
