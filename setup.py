@@ -13,6 +13,7 @@ setup(
     install_requires=[
         "impyla",
         "IPython",
+        "findspark",
         "matplotlib>=2.1",  # 2.1 introduced ticker.PercentFormatter
         "mysql-connector-python",
         "pandas",
