@@ -4,6 +4,8 @@ import findspark
 findspark.init('/usr/lib/spark2')
 from pyspark.sql import SparkSession
 
+from wmfdata.utils import check_kerberos_auth
+
 # TODO:
 # Auto zip and ship juptyer venv with yarn spark job.
 # https://wikitech.wikimedia.org/wiki/SWAP#Launching_as_SparkSession_in_a_Python_Notebook
@@ -46,6 +48,9 @@ def get_session(master='yarn', app_name='wmfdata', spark_config={}):
     
     Code calling this is responsible for starting a timeout using `start_session_timeout` when it finishes using the session, in order to prevent idle Spark sessions from wasting cluster resources. This function takes cares of cancelling the timeout if the session is returned again before the timeout finishes.
     """
+    
+    # Ensure the user has valid Kerberos credentials; if not, the next step will hang indefinitely
+    check_kerberos_auth()
 
     builder = (
         SparkSession.builder

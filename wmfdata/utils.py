@@ -2,6 +2,7 @@ import sys
 from math import log10, floor
 import re
 import requests
+import subprocess
 from packaging import version
 
 from IPython.display import HTML
@@ -104,3 +105,13 @@ def check_remote_version(local_version):
         'is_newer': version.parse(remote_version) > version.parse(local_version)
     }
     return d
+
+def check_kerberos_auth():
+    klist = subprocess.call("klist")
+    if klist == 1:
+        raise OSError(
+            "You do not have Kerberos credentials. " +
+            "Authenticate using `kinit` or run your script as a keytab-enabled user."
+        )
+    elif klist != 0:
+        raise OSError("There was an unknown issue checking your Kerberos credentials.")

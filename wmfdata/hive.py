@@ -18,16 +18,6 @@ def run(cmds, fmt = "pandas", spark_master='yarn', app_name='wmfdata', spark_con
     if type(cmds) == str:
         cmds = [cmds]
 
-    # Check whether user has authenticated with Kerberos:
-    klist = subprocess.call("klist")
-    if klist == 1:
-        raise OSError(
-            "You do not have Kerberos credentials. " +
-            "Authenticate using `kinit` or run your script as a keytab-enabled user."
-        )
-    elif klist != 0:
-        raise OSError("There was an unknown issue checking your Kerberos credentials.")
-
     result = None
 
     spark_session = spark.get_session(spark_master, app_name, spark_config)
