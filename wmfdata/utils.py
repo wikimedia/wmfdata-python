@@ -107,7 +107,7 @@ def check_remote_version(local_version):
     return d
 
 def check_kerberos_auth():
-    klist = subprocess.call("klist")
+    klist = subprocess.call(["klist", "-s"])
     if klist == 1:
         raise OSError(
             "You do not have Kerberos credentials. " +
