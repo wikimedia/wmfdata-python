@@ -14,37 +14,26 @@ def run(cmds, fmt = "pandas", spark_master='yarn', app_name='wmfdata', spark_con
 
     if fmt not in ["pandas", "raw"]:
         raise ValueError("The `fmt` should be either `pandas` or `raw`.")
-
     if type(cmds) == str:
         cmds = [cmds]
 
-    result = None
-
     spark_session = spark.get_session(spark_master, app_name, spark_config)
 
-    # TODO figure out how to handle multiple commands
-
-    cmd = cmds[0]
-    spark_result = spark_session.sql(cmd)
-    collected_result = None
-    
+    result_DF = None
+    for cmd in cmds:
+        cmd_result = spark_session.sql(cmd)
+        
+        # If the result has columns, the command was a query and therefore results-producing.
+        # If not, it was a DDL or DML command and not results-producing.
+        if len(cmd_result.columns) > 0:
+            result_DF = cmd_result
     if fmt == 'pandas':
-        collected_result = spark_result.toPandas()
+        result = result_DF.toPandas()
     else:
-        collected_result = spark_result.collect()
+        result = result_DF.collect()
     
     spark.start_session_timeout(spark_session)
-    return collected_result
-
-    # for cmd in cmds:
-    #     resultDf = spark.sql(cmd)
-    #     if fmt == "pandas":
-    #         result = resultDf.asPandas()
-    #         # Happens if there are no results (as with an INSERT INTO query)
-    #         except TypeError:
-    #             pass
-    #     else:
-    #         result = hive_cursor.fetchall()
+    return result
 
 def load_csv(
     path, field_spec, db_name, table_name,
