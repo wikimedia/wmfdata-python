@@ -3,7 +3,7 @@ from shutil import copyfileobj
 import subprocess
 
 from wmfdata.utils import print_err, mediawiki_dt
-from wmfdata.spark import get_spark_session
+from wmfdata import spark
 
 def run(cmds, fmt = "pandas", spark_master='yarn', app_name='wmfdata', spark_config={}):
     """
@@ -14,44 +14,26 @@ def run(cmds, fmt = "pandas", spark_master='yarn', app_name='wmfdata', spark_con
 
     if fmt not in ["pandas", "raw"]:
         raise ValueError("The `fmt` should be either `pandas` or `raw`.")
-
     if type(cmds) == str:
         cmds = [cmds]
 
-    # Check whether user has authenticated with Kerberos:
-    klist = subprocess.call("klist")
-    if klist == 1:
-        raise OSError(
-            "You do not have Kerberos credentials. " +
-            "Authenticate using `kinit` or run your script as a keytab-enabled user."
-        )
-    elif klist != 0:
-        raise OSError("There was an unknown issue checking your Kerberos credentials.")
+    spark_session = spark.get_session(spark_master, app_name, spark_config)
 
-    result = None
-
-    spark = get_spark_session(spark_master, app_name, spark_config)
-
-    # TODO figure out how to handle multiple commands
-
-    cmd = cmds[0]
-    resultDf = spark.sql(cmd)
+    result_DF = None
+    for cmd in cmds:
+        cmd_result = spark_session.sql(cmd)
+        
+        # If the result has columns, the command was a query and therefore results-producing.
+        # If not, it was a DDL or DML command and not results-producing.
+        if len(cmd_result.columns) > 0:
+            result_DF = cmd_result
     if fmt == 'pandas':
-        return resultDf.toPandas()
+        result = result_DF.toPandas()
     else:
-        return resultDf.collect()
-
-    # for cmd in cmds:
-    #     resultDf = spark.sql(cmd)
-    #     if fmt == "pandas":
-    #         result = resultDf.asPandas()
-    #         # Happens if there are no results (as with an INSERT INTO query)
-    #         except TypeError:
-    #             pass
-    #     else:
-    #         result = hive_cursor.fetchall()
-
-
+        result = result_DF.collect()
+    
+    spark.start_session_timeout(spark_session)
+    return result
 
 def load_csv(
     path, field_spec, db_name, table_name,
