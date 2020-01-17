@@ -26,7 +26,7 @@ def cancel_session_timeout(session):
     timeout = session_timeouts.get(application_id)
     if timeout:
         timeout.cancel()
-        # The stopped thread remains in the dictionary
+        # Delete the stopped thread from `session_timeouts` as a sign that the session was not stopped
         del session_timeouts[application_id]
 
 def start_session_timeout(session):
@@ -38,6 +38,7 @@ def start_session_timeout(session):
     # Cancel any existing timeout on the same session
     cancel_session_timeout(session)
 
+    # When the timeout executes, leave the stopped thread in `session_timeouts` as a sign that the session was stopped
     timeout = Timer(3600, session.stop)
     session_timeouts[application_id] = timeout
     timeout.start()
