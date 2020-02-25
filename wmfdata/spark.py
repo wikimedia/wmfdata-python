@@ -4,11 +4,34 @@ import findspark
 findspark.init('/usr/lib/spark2')
 from pyspark.sql import SparkSession
 
-from wmfdata.utils import check_kerberos_auth
+from wmfdata.utils import check_kerberos_auth, print_err
 
 # TODO:
 # Auto zip and ship juptyer venv with yarn spark job.
 # https://wikitech.wikimedia.org/wiki/SWAP#Launching_as_SparkSession_in_a_Python_Notebook
+             
+REGULAR_SPARK_SETTINGS = {
+    "spark.driver.memory": "2g",
+    "spark.dynamicAllocation.maxExecutors": 64,
+    "spark.executor.memory": "8g",
+    "spark.executor.cores": 4,
+    "spark.sql.shuffle.partitions": 256
+}
+
+LARGE_SPARK_SETTINGS = {
+    "spark.driver.memory": "4g",
+    "spark.dynamicAllocation.maxExecutors": 128,
+    "spark.executor.memory": "8g",
+    "spark.executor.cores": 4,
+    "spark.sql.shuffle.partitions": 512
+}
+
+EXTRA_JAVA_OPTIONS = {
+    "http.proxyHost": "webproxy.eqiad.wmnet",
+    "http.proxyPort": "8080",
+    "https.proxyHost": "webproxy.eqiad.wmnet",
+    "https.proxyPort": "8080"
+}
 
 def get_application_id(session):
     return session.sparkContext.applicationId
@@ -43,31 +66,39 @@ def start_session_timeout(session):
     session_timeouts[application_id] = timeout
     timeout.start()
 
-def get_session(master='yarn', app_name='wmfdata', spark_config={}):
+def get_session(type="regular", app_name="wmfdata", spark_config={}, extra_settings={}):
     """
     Returns an existent Spark session, or a new one if one hasn't yet been created.
     
     Code calling this is responsible for starting a timeout using `start_session_timeout` when it finishes using the session, in order to prevent idle Spark sessions from wasting cluster resources. This function takes cares of cancelling the timeout if the session is returned again before the timeout finishes.
     """
     
+    if type not in ("regular", "large"):
+        raise ValueError("'{}' is not a valid Spark session type.".format(type))
+
     # Ensure the user has valid Kerberos credentials; if not, the next step will hang indefinitely
     check_kerberos_auth()
 
+    # TODO: if there's an existing session, it will be returned with its existing settings even if 
+    # the user has specified a different set of settings in this function call. There will be no indication
+    # that this has happened.
     builder = (
         SparkSession.builder
-        .master(master)
+        .master("yarn")
         .appName(app_name)
         .config(
-            'spark.driver.extraJavaOptions',
-            ' '.join('-D{}={}'.format(k, v) for k, v in {
-                'http.proxyHost': 'webproxy.eqiad.wmnet',
-                'http.proxyPort': '8080',
-                'https.proxyHost': 'webproxy.eqiad.wmnet',
-                'https.proxyPort': '8080',
-            }.items()))
+            "spark.driver.extraJavaOptions",
+            " ".join("-D{}={}".format(k, v) for k, v in EXTRA_JAVA_OPTIONS.items())
+        )
     )
 
-    for k, v in spark_config.items():
+    if type == "regular":
+        config = REGULAR_SPARK_SETTINGS
+    elif type == "large":
+        config = LARGE_SPARK_SETTINGS
+    # Add in any extra settings, overwriting if applicable
+    config.update(extra_settings)
+    for k, v in config.items():
         builder.config(k, v)
 
     session = builder.getOrCreate()
