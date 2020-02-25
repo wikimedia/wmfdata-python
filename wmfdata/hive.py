@@ -5,7 +5,7 @@ import subprocess
 from wmfdata.utils import print_err, mediawiki_dt
 from wmfdata import spark
 
-def run(cmds, fmt = "pandas", spark_master='yarn', app_name='wmfdata', spark_config={}):
+def run(cmds, fmt = "pandas", engine="spark", spark_config={}, extra_spark_settings={}):
     """
     Run one or more Hive queries or command on the Data Lake.
 
@@ -14,10 +14,20 @@ def run(cmds, fmt = "pandas", spark_master='yarn', app_name='wmfdata', spark_con
 
     if fmt not in ["pandas", "raw"]:
         raise ValueError("The `fmt` should be either `pandas` or `raw`.")
+    if engine not in ("spark", "spark-large"):
+        raise ValueError("'{}' is not a valid engine.".format(engine))
     if type(cmds) == str:
         cmds = [cmds]
+    # `spark_config` deprecated in Feb 2020
+    if spark_config:
+        extra_spark_settings = spark_config
+        print_err("The `spark_config` parameter has been deprecated. Please use the `extra_spark_settings` parameter instead.") 
 
-    spark_session = spark.get_session(spark_master, app_name, spark_config)
+    # TODO: Switching the Spark session type no effect if the previous session is still running
+    if engine == "spark":
+        spark_session = spark.get_session(type="regular", extra_settings=extra_spark_settings)
+    elif engine == "spark-large":
+        spark_session = spark.get_session(type="large", extra_settings=extra_spark_settings)
 
     result_DF = None
     for cmd in cmds:
