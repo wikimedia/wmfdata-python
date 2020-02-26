@@ -66,7 +66,7 @@ def start_session_timeout(session):
     session_timeouts[application_id] = timeout
     timeout.start()
 
-def get_session(type="regular", app_name="wmfdata", spark_config={}, extra_settings={}):
+def get_session(type="regular", app_name="wmfdata", extra_settings={}):
     """
     Returns an existent Spark session, or a new one if one hasn't yet been created.
     
