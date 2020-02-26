@@ -23,7 +23,7 @@ def run(cmds, fmt = "pandas", engine="spark", spark_config={}, extra_spark_setti
         extra_spark_settings = spark_config
         print_err("The `spark_config` parameter has been deprecated. Please use the `extra_spark_settings` parameter instead.") 
 
-    # TODO: Switching the Spark session type no effect if the previous session is still running
+    # TODO: Switching the Spark session type has no effect if the previous session is still running
     if engine == "spark":
         spark_session = spark.get_session(type="regular", extra_settings=extra_spark_settings)
     elif engine == "spark-large":

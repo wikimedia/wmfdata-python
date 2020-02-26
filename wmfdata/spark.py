@@ -4,7 +4,7 @@ import findspark
 findspark.init('/usr/lib/spark2')
 from pyspark.sql import SparkSession
 
-from wmfdata.utils import check_kerberos_auth, print_err
+from wmfdata.utils import check_kerberos_auth
 
 # TODO:
 # Auto zip and ship juptyer venv with yarn spark job.
