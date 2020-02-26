@@ -29,21 +29,22 @@ def run(cmds, fmt = "pandas", engine="spark", spark_config={}, extra_spark_setti
     elif engine == "spark-large":
         spark_session = spark.get_session(type="large", extra_settings=extra_spark_settings)
 
-    result_DF = None
+    result = None
     for cmd in cmds:
         cmd_result = spark_session.sql(cmd)
-        
         # If the result has columns, the command was a query and therefore results-producing.
         # If not, it was a DDL or DML command and not results-producing.
         if len(cmd_result.columns) > 0:
-            result_DF = cmd_result
-    if fmt == 'pandas':
-        result = result_DF.toPandas()
+            result = cmd_result
+    if not result:
+        return
+    elif fmt == 'pandas':
+        collected_result = result.toPandas()
     else:
-        result = result_DF.collect()
+        collected_result = result.collect()
     
     spark.start_session_timeout(spark_session)
-    return result
+    return collected_result
 
 def load_csv(
     path, field_spec, db_name, table_name,
