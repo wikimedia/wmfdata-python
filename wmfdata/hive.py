@@ -1,11 +1,68 @@
 import datetime as dt
+import os
 from shutil import copyfileobj
 import subprocess
+import tempfile
 
-from wmfdata.utils import print_err, mediawiki_dt
+import pandas as pd
 from wmfdata import spark
+from wmfdata.utils import print_err, mediawiki_dt
 
-def run(cmds, fmt = "pandas", engine="spark", spark_config={}, extra_spark_settings={}):
+def run_on_cli(query, fmt = "pandas", heap_size = 1024, use_nice = True, use_ionice = True):
+    """
+    Run a query using the Hive command line interface
+    """
+
+    if fmt not in ("pandas", "raw"):
+        raise ValueError("'{}' is not a valid format.".format(fmt))
+
+    cmd = "export HADOOP_HEAPSIZE={0} && "
+
+    if use_nice:
+        cmd += "/usr/bin/nice "
+
+    if use_ionice:
+        cmd += "/usr/bin/ionice "
+
+    cmd += "/usr/bin/hive -S -f {1} 2> /dev/null"
+
+    filters = ["JAVA_TOOL_OPTIONS", "parquet.hadoop", "WARN:", ":WARN"]
+    for filter in filters:
+        cmd += " | grep -v " + filter
+
+    cmd += " > {2}"
+
+    results = None
+    try:
+        # Create temporary files in current working directory to write to:
+        cwd = os.getcwd()
+        query_fd, query_path = tempfile.mkstemp(suffix=".hql", dir=cwd)
+        results_fd, results_path = tempfile.mkstemp(suffix=".tsv", dir=cwd)
+
+        # Write the Hive query:
+        with os.fdopen(query_fd, 'w') as fp:
+            fp.write(query)
+
+        # Execute the Hive query:
+        cmd = cmd.format(heap_size, query_path, results_path)
+        hive_call = subprocess.run(cmd, shell=True)
+        if hive_call.returncode == 0:
+            # Read the results upon successful execution of cmd:
+            if fmt == "pandas":
+                results = pd.read_csv(results_path, sep='\t')
+            else:
+                # If user requested "raw" results, read the text file as-is:
+                with open(results_path, 'r') as file:
+                    results = file.read()
+    finally:
+        # Cleanup:
+        os.unlink(query_path)
+        os.unlink(results_path)
+
+    return results
+
+def run(cmds, fmt="pandas", engine="hive-cli", spark_config={}, extra_spark_settings={}):
+
     """
     Run one or more Hive queries or command on the Data Lake.
 
@@ -14,37 +71,47 @@ def run(cmds, fmt = "pandas", engine="spark", spark_config={}, extra_spark_setti
 
     if fmt not in ["pandas", "raw"]:
         raise ValueError("The `fmt` should be either `pandas` or `raw`.")
-    if engine not in ("spark", "spark-large"):
+    if engine not in ("hive-cli", "spark", "spark-large"):
         raise ValueError("'{}' is not a valid engine.".format(engine))
     if type(cmds) == str:
         cmds = [cmds]
     # `spark_config` deprecated in Feb 2020
     if spark_config:
         extra_spark_settings = spark_config
-        print_err("The `spark_config` parameter has been deprecated. Please use the `extra_spark_settings` parameter instead.") 
-
-    # TODO: Switching the Spark session type has no effect if the previous session is still running
-    if engine == "spark":
-        spark_session = spark.get_session(type="regular", extra_settings=extra_spark_settings)
-    elif engine == "spark-large":
-        spark_session = spark.get_session(type="large", extra_settings=extra_spark_settings)
-
-    result = None
-    for cmd in cmds:
-        cmd_result = spark_session.sql(cmd)
-        # If the result has columns, the command was a query and therefore results-producing.
-        # If not, it was a DDL or DML command and not results-producing.
-        if len(cmd_result.columns) > 0:
-            result = cmd_result
-    if not result:
-        return
-    elif fmt == 'pandas':
-        collected_result = result.toPandas()
-    else:
-        collected_result = result.collect()
+        print_err("The `spark_config` parameter has been deprecated. Please use the `extra_spark_settings` parameter instead.")
     
-    spark.start_session_timeout(spark_session)
-    return collected_result
+    result = None
+
+    if engine in ("spark", "spark-large"):
+        # TODO: Switching the Spark session type has no effect if the previous session is still running
+        if engine == "spark":
+            spark_session = spark.get_session(type="regular", extra_settings=extra_spark_settings)
+        elif engine == "spark-large":
+            spark_session = spark.get_session(type="large", extra_settings=extra_spark_settings)
+        
+        for cmd in cmds:
+            cmd_result = spark_session.sql(cmd)
+            # If the result has columns, the command was a query and therefore results-producing.
+            # If not, it was a DDL or DML command and not results-producing.
+            if len(cmd_result.columns) > 0:
+                uncollected_result = cmd_result
+        if uncollected_result and fmt == "pandas":
+            result = uncollected_result.toPandas()
+        elif fmt == "raw":
+            result = uncollected_result.collect()
+
+        spark.start_session_timeout(spark_session)
+    elif engine == "hive-cli":
+        for cmd in cmds:
+            cmd_result = run_on_cli(cmd, fmt)
+            if cmd_result is not None:
+                if fmt == "pandas":
+                    result = cmd_result
+                else:
+                    # TODO: this should be in the same format as other raw results
+                    result = cmd_result
+
+    return result
 
 def load_csv(
     path, field_spec, db_name, table_name,
