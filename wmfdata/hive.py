@@ -1,12 +1,13 @@
 import datetime as dt
 import os
+import re
 from shutil import copyfileobj
 import subprocess
 import tempfile
 
 import pandas as pd
 from wmfdata import spark
-from wmfdata.utils import print_err, mediawiki_dt
+from wmfdata.utils import print_err, mediawiki_dt, check_kerberos_auth
 
 def run_on_cli(query, fmt = "pandas", heap_size = 1024, use_nice = True, use_ionice = True):
     """
@@ -15,6 +16,7 @@ def run_on_cli(query, fmt = "pandas", heap_size = 1024, use_nice = True, use_ion
 
     if fmt not in ("pandas", "raw"):
         raise ValueError("'{}' is not a valid format.".format(fmt))
+    check_kerberos_auth()
 
     cmd = "export HADOOP_HEAPSIZE={0} && "
 
@@ -24,13 +26,7 @@ def run_on_cli(query, fmt = "pandas", heap_size = 1024, use_nice = True, use_ion
     if use_ionice:
         cmd += "/usr/bin/ionice "
 
-    cmd += "/usr/bin/hive -S -f {1} 2> /dev/null"
-
-    filters = ["JAVA_TOOL_OPTIONS", "parquet.hadoop", "WARN:", ":WARN"]
-    for filter in filters:
-        cmd += " | grep -v " + filter
-
-    cmd += " > {2}"
+    cmd += "/usr/bin/hive -S -f {1}"
 
     results = None
     try:
@@ -45,7 +41,7 @@ def run_on_cli(query, fmt = "pandas", heap_size = 1024, use_nice = True, use_ion
 
         # Execute the Hive query:
         cmd = cmd.format(heap_size, query_path, results_path)
-        hive_call = subprocess.run(cmd, shell=True)
+        hive_call = subprocess.run(cmd, shell=True, stdout=results_fd, stderr=subprocess.PIPE)
         if hive_call.returncode == 0:
             # Read the results upon successful execution of cmd:
             if fmt == "pandas":
@@ -54,6 +50,20 @@ def run_on_cli(query, fmt = "pandas", heap_size = 1024, use_nice = True, use_ion
                 # If user requested "raw" results, read the text file as-is:
                 with open(results_path, 'r') as file:
                     results = file.read()
+        # If the hive call has not completed successfully
+        else:
+            # Remove logspam from the standard error so it's easier to see the actual error
+            stderr = iter(hive_call.stderr.decode().splitlines())
+            cleaned_stderr = ""
+            for line in stderr:
+                filter = r"JAVA_TOOL_OPTIONS|parquet\.hadoop|WARN:|:WARN|SLF4J"
+                if re.search(filter, line) is None:
+                    cleaned_stderr += line
+                    cleaned_stderr += "\n"
+
+            raise ChildProcessError(
+                "The Hive command line client encountered the following error:\n{}".format(cleaned_stderr)
+            )
     finally:
         # Cleanup:
         os.unlink(query_path)
