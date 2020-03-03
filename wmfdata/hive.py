@@ -9,26 +9,33 @@ import pandas as pd
 from wmfdata import spark
 from wmfdata.utils import print_err, mediawiki_dt, check_kerberos_auth
 
-def run_on_cli(query, fmt = "pandas", heap_size = 1024, use_nice = True, use_ionice = True):
+def run_on_cli(cmds, fmt = "pandas", heap_size = 1024, use_nice = True, use_ionice = True):
     """
     Run a query using the Hive command line interface
     """
 
+    if type(cmds) == str:
+        cmds = [cmds]
     if fmt not in ("pandas", "raw"):
         raise ValueError("'{}' is not a valid format.".format(fmt))
     check_kerberos_auth()
 
-    cmd = "export HADOOP_HEAPSIZE={0} && "
-
+    shell_command = "export HADOOP_HEAPSIZE={0} && "
     if use_nice:
-        cmd += "/usr/bin/nice "
-
+        shell_command += "/usr/bin/nice "
     if use_ionice:
-        cmd += "/usr/bin/ionice "
+        shell_command += "/usr/bin/ionice "
+    shell_command += "/usr/bin/hive -S -f {1}"
 
-    cmd += "/usr/bin/hive -S -f {1}"
+    result = None
 
-    results = None
+    # Support multiple commands by concatenating them in one file.
+    # If the user has provided two queries, this will result in broken output.
+    # But that is not an supported use case, and supporting the previous behavior of run() 
+    # (returning only the output of the second query) would be very complex. Similarly,
+    # trying to detect if multiple queries have been provided would be very complex.
+    
+    merged_cmds = ";\n".join(cmds)
     try:
         # Create temporary files in current working directory to write to:
         cwd = os.getcwd()
@@ -37,19 +44,19 @@ def run_on_cli(query, fmt = "pandas", heap_size = 1024, use_nice = True, use_ion
 
         # Write the Hive query:
         with os.fdopen(query_fd, 'w') as fp:
-            fp.write(query)
+            fp.write(merged_cmds)
 
         # Execute the Hive query:
-        cmd = cmd.format(heap_size, query_path, results_path)
-        hive_call = subprocess.run(cmd, shell=True, stdout=results_fd, stderr=subprocess.PIPE)
+        shell_command = shell_command.format(heap_size, query_path)
+        hive_call = subprocess.run(shell_command, shell=True, stdout=results_fd, stderr=subprocess.PIPE)
         if hive_call.returncode == 0:
             # Read the results upon successful execution of cmd:
             if fmt == "pandas":
-                results = pd.read_csv(results_path, sep='\t')
+                result = pd.read_csv(results_path, sep='\t')
             else:
                 # If user requested "raw" results, read the text file as-is:
                 with open(results_path, 'r') as file:
-                    results = file.read()
+                    result = file.read()
         # If the hive call has not completed successfully
         else:
             # Remove logspam from the standard error so it's easier to see the actual error
@@ -58,8 +65,7 @@ def run_on_cli(query, fmt = "pandas", heap_size = 1024, use_nice = True, use_ion
             for line in stderr:
                 filter = r"JAVA_TOOL_OPTIONS|parquet\.hadoop|WARN:|:WARN|SLF4J"
                 if re.search(filter, line) is None:
-                    cleaned_stderr += line
-                    cleaned_stderr += "\n"
+                    cleaned_stderr += line + "\n"
 
             raise ChildProcessError(
                 "The Hive command line client encountered the following error:\n{}".format(cleaned_stderr)
@@ -69,7 +75,7 @@ def run_on_cli(query, fmt = "pandas", heap_size = 1024, use_nice = True, use_ion
         os.unlink(query_path)
         os.unlink(results_path)
 
-    return results
+    return result
 
 def run(cmds, fmt="pandas", engine="cli"):
     """
@@ -86,17 +92,8 @@ def run(cmds, fmt="pandas", engine="cli"):
         cmds = [cmds]
 
     result = None
-    if engine == "hive-cli":
-        for cmd in cmds:
-            cmd_result = run_on_cli(cmd, fmt)
-            if cmd_result is not None:
-                if fmt == "pandas":
-                    result = cmd_result
-                else:
-                    # TODO: this should be in the same format as other raw results
-                    result = cmd_result
-
-    return result
+    if engine == "cli":
+        return run_on_cli(cmds, fmt)
 
 def load_csv(
     path, field_spec, db_name, table_name,
