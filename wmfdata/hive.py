@@ -71,8 +71,7 @@ def run_on_cli(query, fmt = "pandas", heap_size = 1024, use_nice = True, use_ion
 
     return results
 
-def run(cmds, fmt="pandas", engine="hive-cli", spark_config={}, extra_spark_settings={}):
-
+def run(cmds, fmt="pandas", engine="cli"):
     """
     Run one or more Hive queries or command on the Data Lake.
 
@@ -81,37 +80,13 @@ def run(cmds, fmt="pandas", engine="hive-cli", spark_config={}, extra_spark_sett
 
     if fmt not in ["pandas", "raw"]:
         raise ValueError("The `fmt` should be either `pandas` or `raw`.")
-    if engine not in ("hive-cli", "spark", "spark-large"):
+    if engine not in ("cli"):
         raise ValueError("'{}' is not a valid engine.".format(engine))
     if type(cmds) == str:
         cmds = [cmds]
-    # `spark_config` deprecated in Feb 2020
-    if spark_config:
-        extra_spark_settings = spark_config
-        print_err("The `spark_config` parameter has been deprecated. Please use the `extra_spark_settings` parameter instead.")
-    
+
     result = None
-
-    if engine in ("spark", "spark-large"):
-        # TODO: Switching the Spark session type has no effect if the previous session is still running
-        if engine == "spark":
-            spark_session = spark.get_session(type="regular", extra_settings=extra_spark_settings)
-        elif engine == "spark-large":
-            spark_session = spark.get_session(type="large", extra_settings=extra_spark_settings)
-        
-        for cmd in cmds:
-            cmd_result = spark_session.sql(cmd)
-            # If the result has columns, the command was a query and therefore results-producing.
-            # If not, it was a DDL or DML command and not results-producing.
-            if len(cmd_result.columns) > 0:
-                uncollected_result = cmd_result
-        if uncollected_result and fmt == "pandas":
-            result = uncollected_result.toPandas()
-        elif fmt == "raw":
-            result = uncollected_result.collect()
-
-        spark.start_session_timeout(spark_session)
-    elif engine == "hive-cli":
+    if engine == "hive-cli":
         for cmd in cmds:
             cmd_result = run_on_cli(cmd, fmt)
             if cmd_result is not None:

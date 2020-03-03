@@ -107,3 +107,35 @@ def get_session(type="regular", app_name="wmfdata", extra_settings={}):
     cancel_session_timeout(session)
     
     return session
+
+def run(cmds, fmt="pandas", session_type="regular", extra_settings={}):
+    """
+    Run one or more SQL commands using the Spark SQL interface.
+
+    If multiple commands are provided, only results from the last results-producing command will be returned.
+    """
+
+    if fmt not in ["pandas", "raw"]:
+        raise ValueError("The `fmt` should be either `pandas` or `raw`.")
+    if session_type not in ("regular", "large"):
+        raise ValueError("'{}' is not a valid Spark session type.".format(session_type))
+    if type(cmds) == str:
+        cmds = [cmds]
+    
+    result = None
+    # TODO: Switching the Spark session type has no effect if the previous session is still running
+    spark_session = get_session(type=session_type, extra_settings=extra_settings)
+    for cmd in cmds:
+        cmd_result = spark_session.sql(cmd)
+        # If the result has columns, the command was a query and therefore results-producing.
+        # If not, it was a DDL or DML command and not results-producing.
+        if len(cmd_result.columns) > 0:
+            uncollected_result = cmd_result
+    if uncollected_result and fmt == "pandas":
+        result = uncollected_result.toPandas()
+    elif fmt == "raw":
+        result = uncollected_result.collect()
+
+    spark.start_session_timeout(spark_session)
+    
+    return result
