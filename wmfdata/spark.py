@@ -136,6 +136,6 @@ def run(cmds, fmt="pandas", session_type="regular", extra_settings={}):
     elif fmt == "raw":
         result = uncollected_result.collect()
 
-    spark.start_session_timeout(spark_session)
+    start_session_timeout(spark_session)
     
     return result
