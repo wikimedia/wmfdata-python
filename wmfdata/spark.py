@@ -110,9 +110,17 @@ def get_session(type="regular", app_name="wmfdata", extra_settings={}):
 
 def run(cmds, fmt="pandas", session_type="regular", extra_settings={}):
     """
-    Run one or more SQL commands using the Spark SQL interface.
+    Runs one or more SQL commands against the Hive tables in the Data Lake using the Spark SQL interface. 
 
-    If multiple commands are provided, only results from the last results-producing command will be returned.
+    Arguments:
+    * `cmds`: the SQL to run. A string for a single command or a list of strings for multiple commands within the same session (useful for things like setting session variables). Passing more than one query is *not* supported; only results from the second will be returned.
+    * `fmt`: the format in which to return data
+        * "pandas": a Pandas data frame
+        * "raw": a list of tuples, as returned by the Spark SQL interface.
+    * `session_type`: the type of Spark session to create.
+        * "regular": the default; able to use up to 15% of Hadoop cluster resources
+        * "large": for queries which require more processing (e.g. joins) or which access more data; able to use up to 30% of Hadoop cluster resources.
+    * `extra_settings`: A dict of additional settings to use when creating the Spark session. These will override the defaults specified by `session_type`.
     """
 
     if fmt not in ["pandas", "raw"]:

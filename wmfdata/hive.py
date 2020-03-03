@@ -11,7 +11,16 @@ from wmfdata.utils import print_err, mediawiki_dt, check_kerberos_auth
 
 def run_on_cli(cmds, fmt = "pandas", heap_size = 1024, use_nice = True, use_ionice = True):
     """
-    Run a query using the Hive command line interface
+    Runs one or more SQL commands against the Hive tables in the Data Lake using Hive's command line interface.
+
+    Arguments:
+    * `cmds`: the SQL to run. A string for a single command or a list of strings for multiple commands within the same session (useful for things like setting session variables). Passing more than one query  is *not* supported, and will usually result in an error.
+    * `fmt`: the format in which to return data
+        * "pandas": a Pandas data frame
+        * "raw": a TSV string, as returned by the command line interface.
+    * `heap_size`: the amount of memory available to the Hive client. Increase this if the query fails with an out of memory error.
+    * `use_nice`: Runs the query with a lower priority for processor usage.
+    * `use_ionice`: Runs the query with a lower priority for disk access.
     """
 
     if type(cmds) == str:
@@ -79,9 +88,7 @@ def run_on_cli(cmds, fmt = "pandas", heap_size = 1024, use_nice = True, use_ioni
 
 def run(cmds, fmt="pandas", engine="cli"):
     """
-    Run one or more Hive queries or command on the Data Lake.
-
-    If multiple commands are provided, only results from the last results-producing command will be returned.
+    Run one or more Hive commands on the Data Lake. Currently, this simply runs the commands using the `run_on_cli` function.
     """
 
     if fmt not in ["pandas", "raw"]:
