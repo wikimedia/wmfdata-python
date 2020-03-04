@@ -10,14 +10,19 @@ from wmfdata.utils import print_err, mediawiki_dt, check_kerberos_auth
 
 def run_cli(commands, format = "pandas", heap_size = 1024, use_nice = True, use_ionice = True):
     """
-    Runs SQL commands against the Hive tables in the Data Lake using Hive's command line interface.
+    Runs SQL commands against the Hive tables in the Data Lake using Hive's
+    command line interface.
 
     Arguments:
-    * `commands`: the SQL to run. A string for a single command or a list of strings for multiple commands within the same session (useful for things like setting session variables). Passing more than one query is *not* supported, and will usually result in an error.
+    * `commands`: the SQL to run. A string for a single command or a list of
+      strings for multiple commands within the same session (useful for things
+      like setting session variables). Passing more than one query is *not*
+      supported, and will usually result in an error.
     * `format`: what format to return the results in
         * "pandas": a Pandas data frame
         * "raw": a TSV string, as returned by the command line interface.
-    * `heap_size`: the amount of memory available to the Hive client. Increase this if a command experiences an out of memory error.
+    * `heap_size`: the amount of memory available to the Hive client. Increase
+      this if a command experiences an out of memory error.
     * `use_nice`: Run with a lower priority for processor usage.
     * `use_ionice`: Run with a lower priority for disk access.
     """
@@ -37,13 +42,15 @@ def run_cli(commands, format = "pandas", heap_size = 1024, use_nice = True, use_
 
     result = None
 
-    # Support multiple commands by concatenating them in one file. If the user has passed more than one query,
-    # this will result in a error when Pandas tries to read the resulting concatenated output (unless the queries
+    # Support multiple commands by concatenating them in one file. If the user
+    # has passed more than one query, this will result in a error when Pandas
+    # tries to read the resulting concatenated output (unless the queries
     # happen to produce the same number of columns).
     #
-    # Ideally, we would return only the last query's results or throw a clearer error ourselves. However,
-    # there's no simple way to determine if multiple queries have been passed or separate their output,
-    # so it's not worth the effort.
+    # Ideally, we would return only the last query's results or throw a clearer
+    # error ourselves. However, there's no simple way to determine if multiple
+    # queries have been passed or separate their output, so it's not worth
+    # the effort.
     merged_commands = ";\n".join(commands)
     
     try:
@@ -76,7 +83,8 @@ def run_cli(commands, format = "pandas", heap_size = 1024, use_nice = True, use_
                         result = content
         # If the hive call has not completed successfully
         else:
-            # Remove logspam from the standard error so it's easier to see the actual error
+            # Remove logspam from the standard error so it's easier to see
+            # the actual error
             stderr = iter(hive_call.stderr.decode().splitlines())
             cleaned_stderr = ""
             for line in stderr:
@@ -96,7 +104,8 @@ def run_cli(commands, format = "pandas", heap_size = 1024, use_nice = True, use_
 
 def run(commands, format="pandas", engine="cli"):
     """
-    Runs SQL commands against the Hive tables in the Data Lake. Currently, this simply passes the commands to the `run_cli` function.
+    Runs SQL commands against the Hive tables in the Data Lake. Currently,
+    this simply passes the commands to the `run_cli` function.
     """
 
     if format not in ["pandas", "raw"]:
@@ -115,17 +124,19 @@ def load_csv(
     create_db=False, sep=",", headers=True
 ):
     """
-    Upload a CSV (or other delimiter-separated value file) to Data Lake's HDFS, for use with Hive
-    and other utilities.
+    Upload a CSV (or other delimiter-separated value file) to Data Lake's HDFS,
+    for use with Hive and other utilities.
 
     `field_spec` specifies the field names and their formats, for the
-    `CREATE TABLE` statement; for example, `name string, age int, graduated bool`.
+    `CREATE TABLE` statement; for example, `name string, age int, graduated
+    bool`.
 
-    To prevent errors caused by typos, the function will not try to create the database first unless
-    `create_db=True` is passed.
+    To prevent errors caused by typos, the function will not try to create the
+    database first unless `create_db=True` is passed.
 
-    `headers` gives whether the file has a header row; if it does, the function strips it before
-    uploading, because Hive treats all rows as data rows.
+    `headers` gives whether the file has a header row; if it does, the
+    function strips it before uploading, because Hive treats all rows as
+    data rows.
     """
     if headers:
         new_path = "/tmp/wmfdata-" + mediawiki_dt(dt.datetime.now())
