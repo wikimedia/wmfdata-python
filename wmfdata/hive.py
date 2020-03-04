@@ -6,7 +6,6 @@ import subprocess
 import tempfile
 
 import pandas as pd
-from wmfdata import spark
 from wmfdata.utils import print_err, mediawiki_dt, check_kerberos_auth
 
 def run_cli(commands, format = "pandas", heap_size = 1024, use_nice = True, use_ionice = True):
