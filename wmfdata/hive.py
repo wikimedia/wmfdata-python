@@ -24,7 +24,7 @@ def run_cli(commands, format = "pandas", heap_size = 1024, use_nice = True, use_
 
     if type(commands) == str:
         commands = [commands]
-    if format not in ("pandas", "raw"):
+    if format not in ["pandas", "raw"]:
         raise ValueError("'{}' is not a valid format.".format(format))
     check_kerberos_auth()
 
@@ -101,7 +101,7 @@ def run(commands, format="pandas", engine="cli"):
 
     if format not in ["pandas", "raw"]:
         raise ValueError("The `format` should be either `pandas` or `raw`.")
-    if engine not in ("cli"):
+    if engine not in ["cli"]:
         raise ValueError("'{}' is not a valid engine.".format(engine))
     if type(commands) == str:
         commands = [commands]

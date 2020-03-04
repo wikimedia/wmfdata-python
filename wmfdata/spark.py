@@ -69,7 +69,7 @@ def get_session(type="regular", app_name="wmfdata", extra_settings={}):
     Code calling this is responsible for starting a timeout using `start_session_timeout` when it finishes using the session, in order to prevent idle Spark sessions from wasting cluster resources. This function takes cares of cancelling the timeout if the session is returned again before the timeout finishes.
     """
     
-    if type not in ("regular", "large"):
+    if type not in ["regular", "large"]:
         raise ValueError("'{}' is not a valid Spark session type.".format(type))
 
     check_kerberos_auth()
@@ -120,7 +120,7 @@ def run(commands, format="pandas", session_type="regular", extra_settings={}):
 
     if format not in ["pandas", "raw"]:
         raise ValueError("The `format` should be either `pandas` or `raw`.")
-    if session_type not in ("regular", "large"):
+    if session_type not in ["regular", "large"]:
         raise ValueError("'{}' is not a valid Spark session type.".format(session_type))
     if type(commands) == str:
         commands = [commands]
