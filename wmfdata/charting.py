@@ -1,7 +1,7 @@
-import matplotlib as mpl
+from matplotlib import style as mpl_style
 from matplotlib import ticker
 
-mpl_style = {
+styles = {
     "font.size": 16,
     "figure.figsize": (14, 7),
     "axes.grid": True,
@@ -11,7 +11,7 @@ mpl_style = {
 }
 
 def set_mpl_style():
-    mpl.style.use(mpl_style)
+    mpl_style.use(styles)
     
 def M_str(x, pos):
     n = int(round(x / 1000000))
