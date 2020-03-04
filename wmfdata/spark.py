@@ -5,10 +5,6 @@ findspark.init('/usr/lib/spark2')
 from pyspark.sql import SparkSession
 
 from wmfdata.utils import check_kerberos_auth
-
-# TODO:
-# Auto zip and ship juptyer venv with yarn spark job.
-# https://wikitech.wikimedia.org/wiki/SWAP#Launching_as_SparkSession_in_a_Python_Notebook
              
 REGULAR_SPARK_SETTINGS = {
     "spark.driver.memory": "2g",
@@ -76,7 +72,6 @@ def get_session(type="regular", app_name="wmfdata", extra_settings={}):
     if type not in ("regular", "large"):
         raise ValueError("'{}' is not a valid Spark session type.".format(type))
 
-    # Ensure the user has valid Kerberos credentials; if not, the next step will hang indefinitely
     check_kerberos_auth()
 
     # TODO: if there's an existing session, it will be returned with its existing settings even if 
@@ -110,7 +105,7 @@ def get_session(type="regular", app_name="wmfdata", extra_settings={}):
 
 def run(commands, format="pandas", session_type="regular", extra_settings={}):
     """
-    Runs one or more SQL commands against the Hive tables in the Data Lake using the Spark SQL interface. 
+    Runs SQL commands against the Hive tables in the Data Lake using the PySpark SQL interface.
 
     Arguments:
     * `commands`: the SQL to run. A string for a single command or a list of strings for multiple commands within the same session (useful for things like setting session variables). Passing more than one query is *not* supported; only results from the second will be returned.

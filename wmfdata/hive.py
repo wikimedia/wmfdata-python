@@ -11,16 +11,16 @@ from wmfdata.utils import print_err, mediawiki_dt, check_kerberos_auth
 
 def run_cli(commands, format = "pandas", heap_size = 1024, use_nice = True, use_ionice = True):
     """
-    Runs one or more SQL commands against the Hive tables in the Data Lake using Hive's command line interface.
+    Runs SQL commands against the Hive tables in the Data Lake using Hive's command line interface.
 
     Arguments:
-    * `commands`: the SQL to run. A string for a single command or a list of strings for multiple commands within the same session (useful for things like setting session variables). Passing more than one query  is *not* supported, and will usually result in an error.
-    * `format`: the format in which to return data
+    * `commands`: the SQL to run. A string for a single command or a list of strings for multiple commands within the same session (useful for things like setting session variables). Passing more than one query is *not* supported, and will usually result in an error.
+    * `format`: what format to return the results in
         * "pandas": a Pandas data frame
         * "raw": a TSV string, as returned by the command line interface.
-    * `heap_size`: the amount of memory available to the Hive client. Increase this if the query fails with an out of memory error.
-    * `use_nice`: Runs the query with a lower priority for processor usage.
-    * `use_ionice`: Runs the query with a lower priority for disk access.
+    * `heap_size`: the amount of memory available to the Hive client. Increase this if a command experiences an out of memory error.
+    * `use_nice`: Run with a lower priority for processor usage.
+    * `use_ionice`: Run with a lower priority for disk access.
     """
 
     if type(commands) == str:
@@ -38,13 +38,15 @@ def run_cli(commands, format = "pandas", heap_size = 1024, use_nice = True, use_
 
     result = None
 
-    # Support multiple commands by concatenating them in one file.
-    # If the user has provided two queries, this will result in broken output.
-    # But that is not an supported use case, and supporting the previous behavior of run() 
-    # (returning only the output of the second query) would be very complex. Similarly,
-    # trying to detect if multiple queries have been provided would be very complex.
-    
+    # Support multiple commands by concatenating them in one file. If the user has passed more than one query,
+    # this will result in a error when Pandas tries to read the resulting concatenated output (unless the queries
+    # happen to produce the same number of columns).
+    #
+    # Ideally, we would return only the last query's results or throw a clearer error ourselves. However,
+    # there's no simple way to determine if multiple queries have been passed or separate their output,
+    # so it's not worth the effort.
     merged_commands = ";\n".join(commands)
+    
     try:
         # Create temporary files in current working directory to write to:
         cwd = os.getcwd()
@@ -70,6 +72,7 @@ def run_cli(commands, format = "pandas", heap_size = 1024, use_nice = True, use_
                 # If user requested "raw" results, read the text file as-is:
                 with open(results_path, 'r') as file:
                     content = file.read()
+                    # If the statement had output:
                     if content:
                         result = content
         # If the hive call has not completed successfully
@@ -86,7 +89,7 @@ def run_cli(commands, format = "pandas", heap_size = 1024, use_nice = True, use_
                 "The Hive command line client encountered the following error:\n{}".format(cleaned_stderr)
             )
     finally:
-        # Cleanup:
+        # Remove temporary files:
         os.unlink(query_path)
         os.unlink(results_path)
 
@@ -94,7 +97,7 @@ def run_cli(commands, format = "pandas", heap_size = 1024, use_nice = True, use_
 
 def run(commands, format="pandas", engine="cli"):
     """
-    Run one or more Hive commands on the Data Lake. Currently, this simply runs the commands using the `run_cli` function.
+    Runs SQL commands against the Hive tables in the Data Lake. Currently, this simply passes the commands to the `run_cli` function.
     """
 
     if format not in ["pandas", "raw"]:
