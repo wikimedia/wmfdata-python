@@ -108,13 +108,13 @@ def get_session(type="regular", app_name="wmfdata", extra_settings={}):
     
     return session
 
-def run(cmds, fmt="pandas", session_type="regular", extra_settings={}):
+def run(commands, format="pandas", session_type="regular", extra_settings={}):
     """
     Runs one or more SQL commands against the Hive tables in the Data Lake using the Spark SQL interface. 
 
     Arguments:
-    * `cmds`: the SQL to run. A string for a single command or a list of strings for multiple commands within the same session (useful for things like setting session variables). Passing more than one query is *not* supported; only results from the second will be returned.
-    * `fmt`: the format in which to return data
+    * `commands`: the SQL to run. A string for a single command or a list of strings for multiple commands within the same session (useful for things like setting session variables). Passing more than one query is *not* supported; only results from the second will be returned.
+    * `format`: the format in which to return data
         * "pandas": a Pandas data frame
         * "raw": a list of tuples, as returned by the Spark SQL interface.
     * `session_type`: the type of Spark session to create.
@@ -123,25 +123,25 @@ def run(cmds, fmt="pandas", session_type="regular", extra_settings={}):
     * `extra_settings`: A dict of additional settings to use when creating the Spark session. These will override the defaults specified by `session_type`.
     """
 
-    if fmt not in ["pandas", "raw"]:
-        raise ValueError("The `fmt` should be either `pandas` or `raw`.")
+    if format not in ["pandas", "raw"]:
+        raise ValueError("The `format` should be either `pandas` or `raw`.")
     if session_type not in ("regular", "large"):
         raise ValueError("'{}' is not a valid Spark session type.".format(session_type))
-    if type(cmds) == str:
-        cmds = [cmds]
+    if type(commands) == str:
+        commands = [commands]
     
     result = None
     # TODO: Switching the Spark session type has no effect if the previous session is still running
     spark_session = get_session(type=session_type, extra_settings=extra_settings)
-    for cmd in cmds:
+    for cmd in commands:
         cmd_result = spark_session.sql(cmd)
         # If the result has columns, the command was a query and therefore results-producing.
         # If not, it was a DDL or DML command and not results-producing.
         if len(cmd_result.columns) > 0:
             uncollected_result = cmd_result
-    if uncollected_result and fmt == "pandas":
+    if uncollected_result and format == "pandas":
         result = uncollected_result.toPandas()
-    elif fmt == "raw":
+    elif format == "raw":
         result = uncollected_result.collect()
 
     start_session_timeout(spark_session)

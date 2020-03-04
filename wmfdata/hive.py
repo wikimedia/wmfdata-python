@@ -9,13 +9,13 @@ import pandas as pd
 from wmfdata import spark
 from wmfdata.utils import print_err, mediawiki_dt, check_kerberos_auth
 
-def run_on_cli(cmds, fmt = "pandas", heap_size = 1024, use_nice = True, use_ionice = True):
+def run_cli(commands, format = "pandas", heap_size = 1024, use_nice = True, use_ionice = True):
     """
     Runs one or more SQL commands against the Hive tables in the Data Lake using Hive's command line interface.
 
     Arguments:
-    * `cmds`: the SQL to run. A string for a single command or a list of strings for multiple commands within the same session (useful for things like setting session variables). Passing more than one query  is *not* supported, and will usually result in an error.
-    * `fmt`: the format in which to return data
+    * `commands`: the SQL to run. A string for a single command or a list of strings for multiple commands within the same session (useful for things like setting session variables). Passing more than one query  is *not* supported, and will usually result in an error.
+    * `format`: the format in which to return data
         * "pandas": a Pandas data frame
         * "raw": a TSV string, as returned by the command line interface.
     * `heap_size`: the amount of memory available to the Hive client. Increase this if the query fails with an out of memory error.
@@ -23,10 +23,10 @@ def run_on_cli(cmds, fmt = "pandas", heap_size = 1024, use_nice = True, use_ioni
     * `use_ionice`: Runs the query with a lower priority for disk access.
     """
 
-    if type(cmds) == str:
-        cmds = [cmds]
-    if fmt not in ("pandas", "raw"):
-        raise ValueError("'{}' is not a valid format.".format(fmt))
+    if type(commands) == str:
+        commands = [commands]
+    if format not in ("pandas", "raw"):
+        raise ValueError("'{}' is not a valid format.".format(format))
     check_kerberos_auth()
 
     shell_command = "export HADOOP_HEAPSIZE={0} && "
@@ -44,7 +44,7 @@ def run_on_cli(cmds, fmt = "pandas", heap_size = 1024, use_nice = True, use_ioni
     # (returning only the output of the second query) would be very complex. Similarly,
     # trying to detect if multiple queries have been provided would be very complex.
     
-    merged_cmds = ";\n".join(cmds)
+    merged_commands = ";\n".join(commands)
     try:
         # Create temporary files in current working directory to write to:
         cwd = os.getcwd()
@@ -53,14 +53,14 @@ def run_on_cli(cmds, fmt = "pandas", heap_size = 1024, use_nice = True, use_ioni
 
         # Write the Hive query:
         with os.fdopen(query_fd, 'w') as fp:
-            fp.write(merged_cmds)
+            fp.write(merged_commands)
 
         # Execute the Hive query:
         shell_command = shell_command.format(heap_size, query_path)
         hive_call = subprocess.run(shell_command, shell=True, stdout=results_fd, stderr=subprocess.PIPE)
         if hive_call.returncode == 0:
             # Read the results upon successful execution of cmd:
-            if fmt == "pandas":
+            if format == "pandas":
                 result = pd.read_csv(results_path, sep='\t')
             else:
                 # If user requested "raw" results, read the text file as-is:
@@ -86,21 +86,21 @@ def run_on_cli(cmds, fmt = "pandas", heap_size = 1024, use_nice = True, use_ioni
 
     return result
 
-def run(cmds, fmt="pandas", engine="cli"):
+def run(commands, format="pandas", engine="cli"):
     """
-    Run one or more Hive commands on the Data Lake. Currently, this simply runs the commands using the `run_on_cli` function.
+    Run one or more Hive commands on the Data Lake. Currently, this simply runs the commands using the `run_cli` function.
     """
 
-    if fmt not in ["pandas", "raw"]:
-        raise ValueError("The `fmt` should be either `pandas` or `raw`.")
+    if format not in ["pandas", "raw"]:
+        raise ValueError("The `format` should be either `pandas` or `raw`.")
     if engine not in ("cli"):
         raise ValueError("'{}' is not a valid engine.".format(engine))
-    if type(cmds) == str:
-        cmds = [cmds]
+    if type(commands) == str:
+        commands = [commands]
 
     result = None
     if engine == "cli":
-        return run_on_cli(cmds, fmt)
+        return run_cli(commands, format)
 
 def load_csv(
     path, field_spec, db_name, table_name,
