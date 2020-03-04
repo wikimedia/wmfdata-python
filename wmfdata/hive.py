@@ -61,11 +61,17 @@ def run_cli(commands, format = "pandas", heap_size = 1024, use_nice = True, use_
         if hive_call.returncode == 0:
             # Read the results upon successful execution of cmd:
             if format == "pandas":
-                result = pd.read_csv(results_path, sep='\t')
+                try:
+                    result = pd.read_csv(results_path, sep='\t')
+                except pd.errors.EmptyDataError:
+                    # The command had no output
+                    pass
             else:
                 # If user requested "raw" results, read the text file as-is:
                 with open(results_path, 'r') as file:
-                    result = file.read()
+                    content = file.read()
+                    if content:
+                        result = content
         # If the hive call has not completed successfully
         else:
             # Remove logspam from the standard error so it's easier to see the actual error
