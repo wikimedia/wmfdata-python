@@ -8,7 +8,7 @@ with open("wmfdata/metadata.py") as file:
 
 setup(
     name="wmfdata",
-    version = metadata["version"],
+    version=metadata["version"],
     description="Tools for analyzing data on SWAP, a platform for confidential Wikimedia data",
     install_requires=[
         "IPython",
