@@ -1,5 +1,5 @@
 # Import all submodules so all are accessible after `import wmfdata`
-from wmfdata import charting, hive, metadata, utils  # mariadb,
+from wmfdata import charting, hive, mariadb, metadata, spark, utils
 
 welcome_message = """{0}
 
