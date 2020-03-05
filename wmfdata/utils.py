@@ -37,13 +37,20 @@ def pd_display_all(df):
         
 def insert_code_toggle():
     """
-    Outputs a button that will show or hide the code cells in exported HTML versions of the notebook.
+    Outputs a button that will show or hide the code cells in exported HTML
+    versions of the notebook.
     """
     
-    # Based on a StackOverflow answer by harshil: https://stackoverflow.com/a/28073228/2509972
+    # Based on a StackOverflow answer by harshil
+    # https://stackoverflow.com/a/28073228/2509972
     display(HTML("""
     <form action="javascript:code_toggle()">
-        <input id="code_toggle" type="submit" value="Hide code" style="font-size: 1.4em">
+        <input
+          id="code_toggle"
+          type="submit"
+          value="Hide code"
+          style="font-size: 1.4em"
+        >
     </form>
     
     <script>
@@ -75,7 +82,8 @@ def mediawiki_dt(dt):
 
 def df_to_remarkup(df):
     """
-    Prints a Pandas dataframe as a Remarkup table suitable for pasting into Phabricator.
+    Prints a Pandas dataframe as a Remarkup table suitable for pasting into
+    Phabricator.
     
     Best used via the `pipe`, as in `my_dataframe.pipe(df_to_remarkup)`.
     """
@@ -89,7 +97,8 @@ def df_to_remarkup(df):
         .replace("|", " | ")
     )
     
-    # Add a pipe to the start of every line, before adding the header separator so it doesn't get a double first pipe
+    # Add a pipe to the start of every line, before adding the header separator
+    # so it doesn't get a double first pipe
     remarkup_table = re.sub(r"^([^|])", r"| \1", psv_table, flags=re.MULTILINE)
     # Make the first row a header
     remarkup_table = remarkup_table.replace("\n", "\n" + header_sep + "\n", 1)
@@ -97,9 +106,15 @@ def df_to_remarkup(df):
     print(remarkup_table)
 
 def check_remote_version(local_version):
-    url = "https://raw.githubusercontent.com/neilpquinn/wmfdata/release/wmfdata/__init__.py"
+    url = (
+      "https://raw.githubusercontent.com/neilpquinn/wmfdata/release/"
+      "wmfdata/__init__.py"
+    )
     r = requests.get(url)
-    remote_version = re.search('(([0-9]+\\.?){2,3})', r.text.split("\n")[0]).group(0)
+    remote_version = re.search(
+      '(([0-9]+\\.?){2,3})',
+      r.text.split("\n")[0]
+      ).group(0)
     d = {
         'version': remote_version,
         'is_newer': version.parse(remote_version) > version.parse(local_version)
@@ -110,8 +125,10 @@ def check_kerberos_auth():
     klist = subprocess.call(["klist", "-s"])
     if klist == 1:
         raise OSError(
-            "You do not have Kerberos credentials. " +
-            "Authenticate using `kinit` or run your script as a keytab-enabled user."
+            "You do not have Kerberos credentials. Authenticate using `kinit` "
+            "or run your script as a keytab-enabled user."
         )
     elif klist != 0:
-        raise OSError("There was an unknown issue checking your Kerberos credentials.")
+        raise OSError(
+          "There was an unknown issue checking your Kerberos credentials."
+        )

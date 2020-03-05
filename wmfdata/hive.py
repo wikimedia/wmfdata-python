@@ -8,7 +8,10 @@ import tempfile
 import pandas as pd
 from wmfdata.utils import print_err, mediawiki_dt, check_kerberos_auth
 
-def run_cli(commands, format = "pandas", heap_size = 1024, use_nice = True, use_ionice = True):
+def run_cli(
+  commands, format = "pandas", heap_size = 1024, use_nice = True,
+  use_ionice = True
+):
     """
     Runs SQL commands against the Hive tables in the Data Lake using Hive's
     command line interface.
@@ -65,7 +68,12 @@ def run_cli(commands, format = "pandas", heap_size = 1024, use_nice = True, use_
 
         # Execute the Hive query:
         shell_command = shell_command.format(heap_size, query_path)
-        hive_call = subprocess.run(shell_command, shell=True, stdout=results_fd, stderr=subprocess.PIPE)
+        hive_call = subprocess.run(
+          shell_command,
+          shell=True,
+          stdout=results_fd,
+          stderr=subprocess.PIPE
+        )
         if hive_call.returncode == 0:
             # Read the results upon successful execution of cmd:
             if format == "pandas":
@@ -93,7 +101,8 @@ def run_cli(commands, format = "pandas", heap_size = 1024, use_nice = True, use_
                     cleaned_stderr += line + "\n"
 
             raise ChildProcessError(
-                "The Hive command line client encountered the following error:\n{}".format(cleaned_stderr)
+                "The Hive command line client encountered the following "
+                "error:\n{}".format(cleaned_stderr)
             )
     finally:
         # Remove temporary files:
