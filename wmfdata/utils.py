@@ -111,6 +111,9 @@ def check_remote_version(local_version):
       "wmfdata/metadata.py"
     )
     r = requests.get(url)
+    # Raise an error if the page couldn't be loaded
+    r.raise_for_status()
+    
     remote_version = re.search('(([0-9]+\\.?){2,3})', r.text).group()
 
     d = {
