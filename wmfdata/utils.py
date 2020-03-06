@@ -108,13 +108,11 @@ def df_to_remarkup(df):
 def check_remote_version(local_version):
     url = (
       "https://raw.githubusercontent.com/neilpquinn/wmfdata/release/"
-      "wmfdata/__init__.py"
+      "wmfdata/metadata.py"
     )
     r = requests.get(url)
-    remote_version = re.search(
-      '(([0-9]+\\.?){2,3})',
-      r.text.split("\n")[0]
-      ).group(0)
+    remote_version = re.search('(([0-9]+\\.?){2,3})', r.text).group()
+
     d = {
         'version': remote_version,
         'is_newer': version.parse(remote_version) > version.parse(local_version)
