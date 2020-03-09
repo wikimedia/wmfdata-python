@@ -73,7 +73,7 @@ def run_to_pandas(connection, commands, date_col=None, index_col=None):
 
     return result
 
-# A named tuple type for returning tuples-format results
+# A named tuple type for returning raw-format results
 ResultSet = namedtuple("ResultSet", ["column_names", "records"])
 
 def run_to_tuples(connection, commands):
@@ -114,14 +114,14 @@ def run(
       ExtensionStorage replica (only works for wiki databases or "wikishared").
       Default false.
     * `format`: which format to return the data in. "pandas" (the default) means
-      a Pandas DataFrame, "tuples" means a named tuple consisting of (1) the
+      a Pandas DataFrame, "raw" means a named tuple consisting of (1) the
       columns names and (2) the records as a list of tuples, the raw format
       specified by Python's database API specification v2.0.
     * `date_col`: if using Pandas format, this parses the specified column or
-      columns from MediaWiki datetimes into Pandas datetimes. If using tuples
+      columns from MediaWiki datetimes into Pandas datetimes. If using raw
       format, has no effect.
     * `index_col`: if using Pandas format, passed to pandas.read_sql_query to
-      set a columns or columns as the index. If using tuples format, has no
+      set a columns or columns as the index. If using raw format, has no
       effect.
     """
     
@@ -150,12 +150,12 @@ def run(
         else:
             return results[0]
     
-    # Allow "raw" as a synonym of "tuples" for temporary back-compatibility
-    # (July 2019)
+    # Allow "tuples" as a synonym of "raw" for temporary back-compatibility
+    # (Mar 2020)
     elif format == "tuples" or format == "raw":
-        if format == "raw":
+        if format == "tuples":
             print_err(
-              "The 'raw' format has been renamed 'tuples'. Please use the new "
+              "The 'tuples' format has been renamed 'raw'. Please use the new "
               "name instead."
             )
             
