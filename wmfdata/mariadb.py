@@ -178,17 +178,3 @@ def run(
     
     else:
         raise ValueError("The format you specified is not supported.")
-
-def multirun(cmds, wikis = None):
-    print_err(
-       "The multirun function has been deprecated. Please pass a list of "
-       "databases to the run function instead."
-    )
-    
-    if not wikis:
-        raise NotImplementedError(
-          "The default set of wikis to run the command on have been removed. "
-          "Please explicitly specify a list of wikis."
-        )
-    
-    return run(cmds, wikis)
