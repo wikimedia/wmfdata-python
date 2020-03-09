@@ -61,6 +61,9 @@ def run_to_pandas(connection, commands, date_col=None, index_col=None):
         date_col = {col: date_format for col in date_col}
     
     # To-do: SQL syntax errors cause a chain of multiple Python errors
+    # The simplest way to fix this is probably to get the raw results and
+    # then turn them into a data frame; this would let us avoid using
+    # Pandas's complex SQL machinery.
     for command in commands:
         try:
             result = pd.read_sql_query(
