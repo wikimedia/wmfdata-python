@@ -7,15 +7,13 @@ metadata = {}
 with open("wmfdata/metadata.py") as file:
     exec(file.read(), metadata)
 
-description = (
-  "Tools for analyzing data on SWAP, a platform for confidential "
-  "Wikimedia data"
-)
-
 setup(
     name="wmfdata",
     version=metadata["version"],
-    description=description,
+    description=(
+        "Tools for analyzing data on SWAP, a platform for confidential "
+        "Wikimedia data"
+    ),
     install_requires=[
         "IPython",
         "findspark",
