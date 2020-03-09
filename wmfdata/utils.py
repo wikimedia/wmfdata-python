@@ -133,3 +133,15 @@ def check_kerberos_auth():
         raise OSError(
           "There was an unknown issue checking your Kerberos credentials."
         )
+
+def ensure_list(str_or_list):
+    """
+    Given a string, wraps it in a list; given a list, returns it unchanged.
+
+    Useful for allowing a function to take a string for a single item or a list
+    of strings for multiple items.
+    """
+    if isinstance(str_or_list, str):
+        return [str_or_list]
+    else:
+        return str_or_list

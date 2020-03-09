@@ -6,7 +6,9 @@ import subprocess
 import tempfile
 
 import pandas as pd
-from wmfdata.utils import print_err, mediawiki_dt, check_kerberos_auth
+from wmfdata.utils import (
+    check_kerberos_auth, ensure_list, mediawiki_dt, print_err
+)
 
 def run_cli(
   commands, format = "pandas", heap_size = 1024, use_nice = True,
@@ -30,8 +32,7 @@ def run_cli(
     * `use_ionice`: Run with a lower priority for disk access.
     """
 
-    if type(commands) == str:
-        commands = [commands]
+    commands = ensure_list(commands)
     if format not in ["pandas", "raw"]:
         raise ValueError("'{}' is not a valid format.".format(format))
     check_kerberos_auth()
@@ -121,8 +122,7 @@ def run(commands, format="pandas", engine="cli"):
         raise ValueError("The `format` should be either `pandas` or `raw`.")
     if engine not in ["cli"]:
         raise ValueError("'{}' is not a valid engine.".format(engine))
-    if type(commands) == str:
-        commands = [commands]
+    commands = ensure_list(commands)
 
     result = None
     if engine == "cli":

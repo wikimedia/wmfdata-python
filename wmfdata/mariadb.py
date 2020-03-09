@@ -7,7 +7,7 @@ import subprocess
 import mysql.connector as mysql
 import pandas as pd
 
-from wmfdata.utils import print_err
+from wmfdata.utils import ensure_list, print_err
 
 # Close any open connections at exit
 @atexit.register
@@ -16,13 +16,6 @@ def clean_up_connection():
     # to open
     if connection:
         connection.close()
-
-# Useful for allowing an argument to take a single string or a list of strings
-def ensure_list(str_or_list):
-    if type(str_or_list) == str:
-        return [str_or_list]
-    else:
-        return str_or_list
 
 def connect(db, use_x1=False):
     # The `analytics-mysql` script requires users to know that the `wikishared`

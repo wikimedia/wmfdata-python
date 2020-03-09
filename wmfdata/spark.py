@@ -4,7 +4,7 @@ import findspark
 findspark.init('/usr/lib/spark2')
 from pyspark.sql import SparkSession
 
-from wmfdata.utils import check_kerberos_auth
+from wmfdata.utils import check_kerberos_auth, ensure_list
 
 REGULAR_SPARK_SETTINGS = {
     "spark.driver.memory": "2g",
@@ -147,8 +147,7 @@ def run(commands, format="pandas", session_type="regular", extra_settings={}):
           "'{}' is not a valid Spark session type."
           .format(session_type)
         )
-    if type(commands) == str:
-        commands = [commands]
+    commands = ensure_list(commands)
 
     result = None
     # TODO: Switching the Spark session type has no effect if the previous
