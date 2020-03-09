@@ -24,5 +24,9 @@ setup(
         "requests"
     ],
     packages=find_packages(),
-    python_requires=">=3"
+    python_requires=">=3",
+    url=metadata["source"],
+    author="Wikimedia Foundation Product Analytics team",
+    author_email="product-analytics@wikimedia.org",
+    license="BSD 3-Clause"
 )
