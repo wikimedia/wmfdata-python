@@ -153,15 +153,7 @@ def run(
         else:
             return results[0]
     
-    # Allow "tuples" as a synonym of "raw" for temporary back-compatibility
-    # (Mar 2020)
-    elif format == "tuples" or format == "raw":
-        if format == "tuples":
-            print_err(
-              "The 'tuples' format has been renamed 'raw'. Please use the new "
-              "name instead."
-            )
-            
+    elif format == "raw":
         for db in dbs:
             connection = connect(db, use_x1)
             result = run_to_tuples(connection, commands)
