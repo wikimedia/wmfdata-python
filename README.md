@@ -1,18 +1,24 @@
-`wmfdata` is an Python package for analyzing Wikimedia data on the [non-public](https://wikitech.wikimedia.org/wiki/Analytics/Data_access#Production_access) [Simple Wikimedia Analytics Platform](https://wikitech.wikimedia.org/wiki/SWAP).
+`wmfdata` is an Python package for analyzing Wikimedia data on the [non-public](https://wikitech.wikimedia.org/wiki/Analytics/Data_access#Production_access) [Simple Wikimedia Analytics Platform](https://wikitech.wikimedia.org/wiki/SWAP). It is maintained by the [Wikimedia Foundation Product Analytics team](https://www.mediawiki.org/wiki/Product_Analytics).
 
-## Philosophy
-`wmfdata` is meant to be [opinionated](https://stackoverflow.com/questions/802050/what-is-opinionated-software) in order to promote a standard workflow within the Wikimedia research and analysis community, but deciding the details of that standard has only just begun. Your feedback is welcome!
+## Features
+wmfdata's most popular feature is SQL data access. The `hive.run`, `spark.run`, and `mariadb.run` functions allow you to run commands against these different data sources and receive the results as a Pandas dataframe in one line of code.
+
+Other features include:
+* Easy generation of Spark sessions using `spark.get_session`
+* Loading CSV or TSV files into Hive using `hive.load_csv`
+* Turning cryptic Kerberos-related errors into clear reminders to renew your Kerberos credentials
+
 
 ## Installation
-If you have Python installed, you should be able to install the latest version of package using the following terminal command:
+You should be able to install the latest version of package using the following terminal command:
 ```
-pip install git+https://github.com/neilpquinn/wmfdata.git
+pip install git+https://github.com/neilpquinn/wmfdata.git@release
 ```
 
 ## Upgrading
-If you have an older version of wmfdata and want to upgrade to the latest, simply add the `--upgrade` flag to the command, resulting in the following:
+If you have an older version of wmfdata and want to upgrade, simply add the `--upgrade` flag to the command, resulting in the following:
 ```
-pip install --upgrade git+https://github.com/neilpquinn/wmfdata.git
+pip install --upgrade git+https://github.com/neilpquinn/wmfdata.git@release
 ```
 
 ## Troubleshooting
@@ -25,6 +31,8 @@ This happens because wmfdata requires matplotlib 2.1 or greater, but the preinst
 1. Log back in, and everything should work correctly. 
 
 ## Support and bug reports
-If you have issues or general feedback, please contact [Neil Patel Quinn](https://meta.wikimedia.org/wiki/User:Neil_P._Quinn-WMF). If you're ready to file a specific bug report or feature request, please use [this Wikimedia Phabricator link](https://phabricator.wikimedia.org/maniphest/task/edit/form/1/?tags=product-analytics&subscribers=Neil_P._Quinn_WMF) to file a task with the tag `product-analytics` and the subscriber `Neil_P._Quinn_WMF`.
+Tasks related to wmfdata are tracked in Wikimedia Phabricator in the [python-wmfdata project](https://phabricator.wikimedia.org/project/profile/4627/). 
 
-If you'd like to contribute code, you're my hero! Just make a [pull request here on GitHub](/pulls).
+You can also email the Product Analytics team at product-analytics AT wikimedia.org with questions or general feedback.
+
+If you're a hero who would like to contribute code, we welcome [pull requests here on GitHub](/pulls).

@@ -4,7 +4,7 @@ import findspark
 findspark.init('/usr/lib/spark2')
 from pyspark.sql import SparkSession
 
-from wmfdata.utils import check_kerberos_auth
+from wmfdata.utils import check_kerberos_auth, ensure_list
 
 REGULAR_SPARK_SETTINGS = {
     "spark.driver.memory": "2g",
@@ -93,7 +93,9 @@ def get_session(type="regular", app_name="wmfdata", extra_settings={}):
         .appName(app_name)
         .config(
             "spark.driver.extraJavaOptions",
-            " ".join("-D{}={}".format(k, v) for k, v in EXTRA_JAVA_OPTIONS.items())
+            " ".join(
+              "-D{}={}".format(k, v) for k, v in EXTRA_JAVA_OPTIONS.items()
+            )
         )
     )
 
@@ -141,14 +143,19 @@ def run(commands, format="pandas", session_type="regular", extra_settings={}):
     if format not in ["pandas", "raw"]:
         raise ValueError("The `format` should be either `pandas` or `raw`.")
     if session_type not in ["regular", "large"]:
-        raise ValueError("'{}' is not a valid Spark session type.".format(session_type))
-    if type(commands) == str:
-        commands = [commands]
+        raise ValueError(
+          "'{}' is not a valid Spark session type."
+          .format(session_type)
+        )
+    commands = ensure_list(commands)
 
     result = None
     # TODO: Switching the Spark session type has no effect if the previous
     # session is still running.
-    spark_session = get_session(type=session_type, extra_settings=extra_settings)
+    spark_session = get_session(
+      type=session_type,
+      extra_settings=extra_settings
+    )
     for cmd in commands:
         cmd_result = spark_session.sql(cmd)
         # If the result has columns, the command was a query and therefore

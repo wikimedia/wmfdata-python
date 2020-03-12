@@ -3,27 +3,23 @@ from collections import namedtuple
 from itertools import chain
 import subprocess
 
-import mysql.connector as mysql # https://pypi.org/project/mysql-connector-python/
+# https://pypi.org/project/mysql-connector-python/
+import mysql.connector as mysql
 import pandas as pd
 
-from wmfdata.utils import print_err
+from wmfdata.utils import ensure_list, print_err
 
 # Close any open connections at exit
 @atexit.register
 def clean_up_connection():
-    # The connection variable may not be defined if the connection failed to open
+    # The connection variable may not be defined if the connection failed
+    # to open
     if connection:
         connection.close()
 
-# Useful for allowing an argument to take a single string or a list of strings
-def ensure_list(str_or_list):
-    if type(str_or_list) == str:
-        return [str_or_list]
-    else:
-        return str_or_list
-
 def connect(db, use_x1=False):
-    # The `analytics-mysql` script requires users to know that the `wikishared` database is located on x1.
+    # The `analytics-mysql` script requires users to know that the `wikishared`
+    # database is located on x1.
     if db == "wikishared":
         use_x1 = True
     
@@ -65,16 +61,22 @@ def run_to_pandas(connection, commands, date_col=None, index_col=None):
         date_col = {col: date_format for col in date_col}
     
     # To-do: SQL syntax errors cause a chain of multiple Python errors
+    # The simplest way to fix this is probably to get the raw results and
+    # then turn them into a data frame; this would let us avoid using
+    # Pandas's complex SQL machinery.
     for command in commands:
         try:
-            result = pd.read_sql_query(command, connection, index_col=index_col, parse_dates=date_col)
-        # pandas will encounter a TypeError with DDL (e.g. CREATE TABLE) or DML (e.g. INSERT) statements
+            result = pd.read_sql_query(
+              command, connection, index_col=index_col, parse_dates=date_col
+            )
+        # pandas will encounter a TypeError with DDL (e.g. CREATE TABLE) or
+        # DML (e.g. INSERT) statements
         except TypeError:
             pass
 
     return result
 
-# A named tuple type for returning tuples-format results
+# A named tuple type for returning raw-format results
 ResultSet = namedtuple("ResultSet", ["column_names", "records"])
 
 def run_to_tuples(connection, commands):
@@ -91,22 +93,39 @@ def run_to_tuples(connection, commands):
     return result
 
 # To-do: provide an easy way to get lists of wikis
-def run(commands, dbs, use_x1=False, format="pandas", date_col=None, index_col=None):
+def run(
+  commands, dbs, use_x1=False, format="pandas", date_col=None,
+  index_col=None
+):
     """
     Run SQL queries or commands on the Analytics MediaWiki replicas.
     
     Arguments:
-    * `commands`: the SQL to run. A string for a single command or a list of string for multiple commands within the same session (useful for things like setting session variables).
-    * `dbs`: a string for one database or a list to run the commands on multiple databases and concatenate the results.  Possible values:
-        * a wiki's database code (e.g. "enwiki", "arwiktionary", "wikidatawiki") for its MediaWiki database (or its ExtensionStorage database if `use_x1` is passed)
+    * `commands`: the SQL to run. A string for a single command or a list of
+      strings for multiple commands within the same session (useful for things
+      like setting session variables).
+    * `dbs`: a string for one database or a list to run the commands on
+      multiple databases and concatenate the results.  Possible values:
+        * a wiki's database code (e.g. "enwiki", "arwiktionary", "wikidatawiki")
+          for its MediaWiki database (or its ExtensionStorage database if
+          `use_x1` is passed)
         * "logs" for the EventLogging
         * "centralauth" for global accounts
         * "wikishared" for cross-wiki ExtensionStorage 
         * "staging" for user-writable ad-hoc tests and analysis
-    * `use_x1`: whether to the connect to the given database on the ExtensionStorage replica (only works for wiki databases or "wikishared"). Default false.
-    * `format`: which format to return the data in. "pandas" (the default) means a Pandas DataFrame, "tuples" means a named tuple consisting of (1) the columns names and (2) the records as a list of tuples, the raw format specified by Python's database API specification v2.0.
-    * `date_col`: if using Pandas format, this parses the specified column or columns from MediaWiki datetimes into Pandas datetimes. If using tuples format, has no effect.
-    * `index_col`: if using Pandas format, passed to pandas.read_sql_query to set a columns or columns as the index. If using tuples format, has no effect.
+    * `use_x1`: whether to the connect to the given database on the
+      ExtensionStorage replica (only works for wiki databases or "wikishared").
+      Default false.
+    * `format`: which format to return the data in. "pandas" (the default) means
+      a Pandas DataFrame, "raw" means a named tuple consisting of (1) the
+      columns names and (2) the records as a list of tuples, the raw format
+      specified by Python's database API specification v2.0.
+    * `date_col`: if using Pandas format, this parses the specified column or
+      columns from MediaWiki datetimes into Pandas datetimes. If using raw
+      format, has no effect.
+    * `index_col`: if using Pandas format, passed to pandas.read_sql_query to
+      set a columns or columns as the index. If using raw format, has no
+      effect.
     """
     
     # Make single command and database parameters lists
@@ -123,7 +142,8 @@ def run(commands, dbs, use_x1=False, format="pandas", date_col=None, index_col=N
             results.append(result)
         
         if len(dbs) > 1:
-            # Ignore the indexes on the partial results unless a custom index column was designated
+            # Ignore the indexes on the partial results unless a custom index
+            # column was designated
             if not index_col:
                 ignore_index = True
             else:
@@ -133,11 +153,7 @@ def run(commands, dbs, use_x1=False, format="pandas", date_col=None, index_col=N
         else:
             return results[0]
     
-    # Allow "raw" as a synonym of "tuples" for temporary back-compatibility (July 2019)
-    elif format == "tuples" or format == "raw":
-        if format == "raw":
-            print_err("""The "raw" format has been renamed "tuples". Please use the new name instead.""")
-            
+    elif format == "raw":
         for db in dbs:
             connection = connect(db, use_x1)
             result = run_to_tuples(connection, commands)
@@ -157,11 +173,3 @@ def run(commands, dbs, use_x1=False, format="pandas", date_col=None, index_col=N
     
     else:
         raise ValueError("The format you specified is not supported.")
-
-def multirun(cmds, wikis = None):
-    print_err("The multirun function has been deprecated. Please pass a list of databases to the run function instead.")
-    
-    if not wikis:
-        raise NotImplementedError("The default set of wikis to run the command on have been removed. Please explicitly specify a list of wikis.")
-    
-    return run(cmds, wikis)
