@@ -1,3 +1,7 @@
+# 1.0.1 (13 March 2020)
+* The minimum required pandas version has been set to 0.20.1, which introduced the `errors` module (the version preinstalled on the Analytics Clients is 0.19.2).
+* The submodules are now imported in a different order to avoid dependency errors.
+
 # 1.0.0 (13 March 2020)
 ## Hive
 - You can now run SQL using Hive's command line interface with `hive.run_cli`.

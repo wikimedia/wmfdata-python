@@ -4,4 +4,4 @@
 # installed.
 
 source = "https://github.com/neilpquinn/wmfdata"
-version = "1.0.0"
+version = "1.0.1"
