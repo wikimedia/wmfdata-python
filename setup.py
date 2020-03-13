@@ -19,7 +19,7 @@ setup(
         "findspark",
         "matplotlib>=2.1", # 2.1 introduced ticker.PercentFormatter
         "mysql-connector-python",
-        "pandas",
+        "pandas>=0.20.1", # 0.20.1 introduced the errors module
         "packaging",
         "requests"
     ],
