@@ -1,5 +1,7 @@
 import atexit
 from collections import namedtuple
+import getpass
+import grp
 from itertools import chain
 import subprocess
 
@@ -39,12 +41,25 @@ def connect(db, use_x1=False):
     
     port = host[1]
     host = host[0]
+
+    # Check which group the user is in, and use the appropriate credentials file
+    user = getpass.getuser()
+    if user in grp.getgrnam("analytics-privatedata-users").gr_mem:
+        option_file = "/etc/mysql/conf.d/analytics-research-client.cnf"
+    elif user in grp.getgrnam("researchers").gr_mem:
+        option_file = "/etc/mysql/conf.d/research-client.cnf"
+    # For users in analytics-users, for example
+    else:
+        raise PermissionError(
+            "Your account does not have permission to access the Analytics "
+            "MariaDB cluster."
+        )
         
     connection = mysql.connect(
         host=host,
         port=port,
         db=db,
-        option_files='/etc/mysql/conf.d/research-client.cnf',
+        option_files=option_file,
         charset='utf8',
         autocommit=True
     )
