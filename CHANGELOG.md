@@ -1,3 +1,6 @@
+# 1.0.2 (19 May 2020)
+* The MariaDB module now looks in the appropriate place for the database credentials based on the user's access group.
+
 # 1.0.1 (13 March 2020)
 * The minimum required pandas version has been set to 0.20.1, which introduced the `errors` module (the version preinstalled on the Analytics Clients is 0.19.2).
 * The submodules are now imported in a different order to avoid dependency errors.
