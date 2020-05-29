@@ -1,3 +1,6 @@
+# 1.0.3 (29 May 2020)
+* The new version notice that display on import now shows the correct URL for updating.
+
 # 1.0.2 (19 May 2020)
 * The MariaDB module now looks in the appropriate place for the database credentials based on the user's access group.
 
