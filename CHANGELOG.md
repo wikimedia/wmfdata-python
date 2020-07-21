@@ -1,3 +1,7 @@
+# 1.0.4 (22 July 2020)
+* The code and documentation now reflect the repository's new location ([github.com/wikimedia/wmfdata-python](https://github.com/wikimedia/wmfdata-python)).
+* The repository now contains a pointer to the [code of conduct for Wikimedia technical spaces](https://www.mediawiki.org/wiki/Code_of_conduct).
+
 # 1.0.3 (29 May 2020)
 * The new version notice that display on import now shows the correct URL for updating.
 
