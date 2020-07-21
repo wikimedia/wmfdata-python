@@ -1,4 +1,4 @@
-`wmfdata` is an Python package for analyzing Wikimedia data on the [non-public](https://wikitech.wikimedia.org/wiki/Analytics/Data_access#Production_access) [Simple Wikimedia Analytics Platform](https://wikitech.wikimedia.org/wiki/SWAP). It is maintained by the [Wikimedia Foundation Product Analytics team](https://www.mediawiki.org/wiki/Product_Analytics).
+`wmfdata` is an Python package for analyzing Wikimedia data on Wikimedia's [non-public](https://wikitech.wikimedia.org/wiki/Analytics/Data_access#Production_access) [analytics clients](https://wikitech.wikimedia.org/wiki/Analytics/Systems/Clients). It is maintained by the [Wikimedia Foundation Product Analytics team](https://www.mediawiki.org/wiki/Product_Analytics).
 
 ## Features
 wmfdata's most popular feature is SQL data access. The `hive.run`, `spark.run`, and `mariadb.run` functions allow you to run commands against these different data sources and receive the results as a Pandas dataframe in one line of code.
@@ -31,8 +31,8 @@ This happens because wmfdata requires matplotlib 2.1 or greater, but the preinst
 1. Log back in, and everything should work correctly. 
 
 ## Support and bug reports
-Tasks related to wmfdata are tracked in Wikimedia Phabricator in the [python-wmfdata project](https://phabricator.wikimedia.org/project/profile/4627/). 
+Tasks related to wmfdata are tracked in Wikimedia Phabricator in the [wmfdata-python project](https://phabricator.wikimedia.org/project/profile/4627/). 
 
-You can also email the Product Analytics team at product-analytics AT wikimedia.org with questions or general feedback.
+You can also email the Product Analytics team at product-analytics AT wikimedia.org with questions or feedback.
 
 If you're a hero who would like to contribute code, we welcome [pull requests here on GitHub](/pulls).
