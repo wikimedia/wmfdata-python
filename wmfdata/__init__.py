@@ -4,7 +4,7 @@ from wmfdata import utils
 from wmfdata import charting, hive, mariadb, metadata, spark
 
 try:
-    remote = utils.check_remote_version(metadata.version)
+    remote = utils.check_remote_version(metadata.source, metadata.version)
     if remote['is_newer']:
         update_message = (
             "You are using wmfdata v{0}, but v{1} is available.\n\n" +

@@ -12,13 +12,13 @@ Other features include:
 ## Installation
 You should be able to install the latest version of package using the following terminal command:
 ```
-pip install git+https://github.com/neilpquinn/wmfdata.git@release
+pip install git+https://github.com/wikimedia/wmfdata-python.git@release
 ```
 
 ## Upgrading
 If you have an older version of wmfdata and want to upgrade, simply add the `--upgrade` flag to the command, resulting in the following:
 ```
-pip install --upgrade git+https://github.com/neilpquinn/wmfdata.git@release
+pip install --upgrade git+https://github.com/wikimedia/wmfdata-python.git@release
 ```
 
 ## Troubleshooting

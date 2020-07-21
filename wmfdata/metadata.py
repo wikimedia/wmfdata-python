@@ -3,5 +3,5 @@
 # package) so that it can be loaded by setup.py before dependencies are
 # installed.
 
-source = "https://github.com/neilpquinn/wmfdata"
+source = "https://github.com/wikimedia/wmfdata-python"
 version = "1.0.3"
