@@ -1,0 +1,3 @@
+As part of the [Wikimedia movement](https://www.wikimedia.org/), wmfdata-python is committed to being an an open and welcoming project for everyone! For this reason, all participants are expected to follow the [code of conduct for Wikimedia technical spaces](https://www.mediawiki.org/wiki/Code_of_Conduct).
+
+For more information about the code and how to report a violation, please see [https://www.mediawiki.org/wiki/Code_of_Conduct].
