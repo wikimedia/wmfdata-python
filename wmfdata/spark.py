@@ -66,7 +66,9 @@ def start_session_timeout(session):
     session_timeouts[application_id] = timeout
     timeout.start()
 
-def get_session(type="regular", app_name="wmfdata", extra_settings={}):
+def get_session(
+    type="regular", app_name="wmfdata", master="yarn", extra_settings={}
+):
     """
     Returns an existent Spark session, or a new one if one hasn't yet been
     created.
@@ -89,7 +91,7 @@ def get_session(type="regular", app_name="wmfdata", extra_settings={}):
     # this has happened.
     builder = (
         SparkSession.builder
-        .master("yarn")
+        .master(master)
         .appName(app_name)
         .config(
             "spark.driver.extraJavaOptions",
