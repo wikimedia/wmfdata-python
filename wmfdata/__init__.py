@@ -1,7 +1,7 @@
 # Import all submodules so they are accessible after `import wmfdata`. utils must go
 # first to prevent circular import issues. Other submodules can depend on utils ONLY.
 from wmfdata import utils
-from wmfdata import charting, hive, mariadb, metadata, spark
+from wmfdata import charting, dblist, hive, mariadb, metadata, spark
 
 try:
     remote = utils.check_remote_version(metadata.source, metadata.version)
