@@ -6,27 +6,47 @@ from pyspark.sql import SparkSession
 
 from wmfdata.utils import check_kerberos_auth, ensure_list
 
-REGULAR_SPARK_SETTINGS = {
-    "spark.driver.memory": "2g",
-    "spark.dynamicAllocation.maxExecutors": 64,
-    "spark.executor.memory": "8g",
-    "spark.executor.cores": 4,
-    "spark.sql.shuffle.partitions": 256
+"""
+Predefined spark sessions and configs for use with the get_session and run functions.
+"""
+PREDEFINED_SPARK_SESSIONS = {
+    'local': {
+        'master': 'local[2]',  # [2] means use 2 local worker threads
+        'config': {
+            'spark.driver.memory': '4g',
+        }
+    },
+    'yarn': {
+        'master': 'yarn',
+        'config': {
+            'spark.driver.memory': '2g',
+            'spark.dynamicAllocation.maxExecutors': 64,
+            'spark.executor.memory': '8g',
+            'spark.executor.cores': 4,
+            'spark.sql.shuffle.partitions': 256
+        }
+    },
+    'yarn-large': {
+        'master': 'yarn',
+        'config': {
+            'spark.driver.memory': '4g',
+            'spark.dynamicAllocation.maxExecutors': 128,
+            'spark.executor.memory': '8g',
+            'spark.executor.cores': 4,
+            'spark.sql.shuffle.partitions': 512
+        }
+    }
 }
 
-LARGE_SPARK_SETTINGS = {
-    "spark.driver.memory": "4g",
-    "spark.dynamicAllocation.maxExecutors": 128,
-    "spark.executor.memory": "8g",
-    "spark.executor.cores": 4,
-    "spark.sql.shuffle.partitions": 512
-}
+# Add previous session 'type' keys for backwards compatibility.
+PREDEFINED_SPARK_SESSIONS['regular'] = PREDEFINED_SPARK_SESSIONS['yarn']
+PREDEFINED_SPARK_SESSIONS['large'] = PREDEFINED_SPARK_SESSIONS['yarn-large']
 
 EXTRA_JAVA_OPTIONS = {
-    "http.proxyHost": "webproxy.eqiad.wmnet",
-    "http.proxyPort": "8080",
-    "https.proxyHost": "webproxy.eqiad.wmnet",
-    "https.proxyPort": "8080"
+    'http.proxyHost': 'webproxy.eqiad.wmnet',
+    'http.proxyPort': '8080',
+    'https.proxyHost': 'webproxy.eqiad.wmnet',
+    'https.proxyPort': '8080'
 }
 
 def get_application_id(session):
@@ -51,7 +71,15 @@ def cancel_session_timeout(session):
         # that the session was not stopped.
         del session_timeouts[application_id]
 
-def start_session_timeout(session):
+
+def stop_session(session):
+    """
+    Cancels any session timers and stops the SparkSession.
+    """
+    cancel_session_timeout(session)
+    session.stop()
+
+def start_session_timeout(session, timeout_seconds=3600):
     """
     Starts an off-main-thread timer stopping a Spark session after an hour.
     """
@@ -62,24 +90,31 @@ def start_session_timeout(session):
 
     # When the timeout executes, leave the stopped thread in `session_timeouts`
     # as a sign that the session was stopped.
-    timeout = Timer(3600, session.stop)
+    timeout = Timer(timeout_seconds, stop_session)
     session_timeouts[application_id] = timeout
     timeout.start()
 
-def get_session(type="regular", app_name="wmfdata", extra_settings={}):
-    """
-    Returns an existent Spark session, or a new one if one hasn't yet been
-    created.
-    
-    Code calling this is responsible for starting a timeout using
-    `start_session_timeout` when it finishes using the session, in order to
-    prevent idle Spark sessions from wasting cluster resources. This function
-    takes cares of cancelling the timeout if the session is returned again
-    before the timeout finishes.
-    """
 
-    if type not in ["regular", "large"]:
-        raise ValueError("'{}' is not a valid Spark session type.".format(type))
+
+def get_spark_session(
+    master='local[2]',
+    app_name='wmfdata',
+    spark_config={},
+    yarn_session_timeout=None
+):
+    """
+    Returns an existent SparkSession, or a new one if one hasn't yet been created.
+
+    Use this instead of get_session if you'd rather have manual control over
+    your SparkSession configuration.
+
+    Note: master, app_name and spark_config are only applied the first time
+    this function is called.  All subsequent calls will return the first created SparkSession.
+
+    If master is yarn, the SparkSession will be stopped after yarn_session_timeout seconds.
+    To restart the timeout clock, call session.restart_timeout().
+    Calling this function again will also restart the timeout clock.
+    """
 
     check_kerberos_auth()
 
@@ -89,7 +124,7 @@ def get_session(type="regular", app_name="wmfdata", extra_settings={}):
     # this has happened.
     builder = (
         SparkSession.builder
-        .master("yarn")
+        .master(master)
         .appName(app_name)
         .config(
             "spark.driver.extraJavaOptions",
@@ -99,27 +134,76 @@ def get_session(type="regular", app_name="wmfdata", extra_settings={}):
         )
     )
 
-    if type == "regular":
-        config = REGULAR_SPARK_SETTINGS
-    elif type == "large":
-        config = LARGE_SPARK_SETTINGS
-    # Add in any extra settings, overwriting if applicable
-    config.update(extra_settings)
-    for k, v in config.items():
+    # Apply any provided spark configs.
+    for k, v in spark_config.items():
         builder.config(k, v)
 
     session = builder.getOrCreate()
 
-    # Cancel any existing timeout on the same session, in case an existing
-    # session is being returned
-    cancel_session_timeout(session)
+    if master == 'yarn' and yarn_session_timeout is not None:
+        session.restart_timeout = lambda t: start_session_timeout(session, t)
+    else:
+        # No-op if not yarn or no timeout
+        session.restart_timeout = lambda t: None
+
+    session.restart_timeout(yarn_session_timeout)
 
     return session
 
-def run(commands, format="pandas", session_type="regular", extra_settings={}):
+
+def get_session(
+    type="yarn",
+    app_name='wmfdata',
+    extra_settings={}
+):
+    """
+    Returns a Spark session based on one of the PREDEFINED_SPARK_SESSION types.
+
+    If running in Yarn, the returned SparkSession will have a timeout of 5 minutes.
+    Call session.restart_timeout() to refresh this timeout.
+    Using this or the run function below will also refresh the timeout every time it is called.
+
+    Arguments:
+    * `session_type`: the type of Spark session to create.
+        * "local": Run the command in a local Spark process.
+        * "yarn": the default; able to use up to 15% of Hadoop cluster
+          resources (This is the default).
+        * "yarn-large": for queries which require more processing (e.g. joins) or
+          which access more data; able to use up to 30% of Hadoop cluster
+          resources.
+    * `extra_settings`: A dict of additional Spark configs to use when creating
+      the Spark session. These will override the defaults specified
+      by `session_type`.
+    """
+
+    if type not in PREDEFINED_SPARK_SESSIONS.keys():
+        raise ValueError(
+            "'{}' is not a valid predefined Spark session type. Must be one of {}".format(
+                type, PREDEFINED_SPARK_SESSIONS.keys()
+            )
+        )
+
+    config = PREDEFINED_SPARK_SESSIONS[type]['config']
+    # Add in any extra settings, overwriting if applicable
+    config.update(extra_settings)
+
+    return get_spark_session(
+        master=PREDEFINED_SPARK_SESSIONS[type]['master'],
+        app_name=app_name,
+        spark_config=config,
+        yarn_session_timeout=3600
+    )
+
+
+def run(commands, format="pandas", session_type="yarn", extra_settings={}):
     """
     Runs SQL commands against the Hive tables in the Data Lake using the
     PySpark SQL interface.
+
+    Note: The session_type and extra_settings will only be applied
+    the first time this function is called.  The SparkSession is only instantiated
+    once per process, and each subsequent call will re-use the previously
+    created SparkSession.
 
     Arguments:
     * `commands`: the SQL to run. A string for a single command or a list of
@@ -130,9 +214,10 @@ def run(commands, format="pandas", session_type="regular", extra_settings={}):
         * "pandas": a Pandas data frame
         * "raw": a list of tuples, as returned by the Spark SQL interface.
     * `session_type`: the type of Spark session to create.
-        * "regular": the default; able to use up to 15% of Hadoop cluster
+        * "local": Run the command in a local Spark process.
+        * "yarn": the default; able to use up to 15% of Hadoop cluster
           resources
-        * "large": for queries which require more processing (e.g. joins) or
+        * "yarn-large": for queries which require more processing (e.g. joins) or
           which access more data; able to use up to 30% of Hadoop cluster
           resources.
     * `extra_settings`: A dict of additional settings to use when creating
@@ -142,11 +227,6 @@ def run(commands, format="pandas", session_type="regular", extra_settings={}):
 
     if format not in ["pandas", "raw"]:
         raise ValueError("The `format` should be either `pandas` or `raw`.")
-    if session_type not in ["regular", "large"]:
-        raise ValueError(
-          "'{}' is not a valid Spark session type."
-          .format(session_type)
-        )
     commands = ensure_list(commands)
 
     result = None
