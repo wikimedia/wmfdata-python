@@ -11,6 +11,8 @@ import pandas as pd
 
 from wmfdata.utils import ensure_list, print_err
 
+
+connection=None
 # Close any open connections at exit
 @atexit.register
 def clean_up_connection():
@@ -24,21 +26,21 @@ def connect(db, use_x1=False):
     # database is located on x1.
     if db == "wikishared":
         use_x1 = True
-    
+
     host_command = "analytics-mysql {db} --print-target".format(db=db)
     if use_x1:
         host_command = host_command + " --use-x1"
-    
+
     host = subprocess.run(
-        host_command, 
+        host_command,
         shell=True,
         stdout=subprocess.PIPE,
         universal_newlines=True
     ).stdout.strip().split(":")
-    
+
     if host == ['']:
         raise ValueError("The database '{}' was not found.".format(db))
-    
+
     port = host[1]
     host = host[0]
 
@@ -54,7 +56,7 @@ def connect(db, use_x1=False):
             "Your account does not have permission to access the Analytics "
             "MariaDB cluster."
         )
-        
+
     connection = mysql.connect(
         host=host,
         port=port,
@@ -63,18 +65,18 @@ def connect(db, use_x1=False):
         charset='utf8',
         autocommit=True
     )
-    
+
     return connection
 
 def run_to_pandas(connection, commands, date_col=None, index_col=None):
     result = None
-    
+
     # Specify the MediaWiki date format for each of the date_cols, if any
     if date_col:
         date_col = ensure_list(date_col)
         date_format = "%Y%m%d%H%M%S"
         date_col = {col: date_format for col in date_col}
-    
+
     # To-do: SQL syntax errors cause a chain of multiple Python errors
     # The simplest way to fix this is probably to get the raw results and
     # then turn them into a data frame; this would let us avoid using
@@ -114,7 +116,7 @@ def run(
 ):
     """
     Run SQL queries or commands on the Analytics MediaWiki replicas.
-    
+
     Arguments:
     * `commands`: the SQL to run. A string for a single command or a list of
       strings for multiple commands within the same session (useful for things
@@ -126,7 +128,7 @@ def run(
           `use_x1` is passed)
         * "logs" for the EventLogging
         * "centralauth" for global accounts
-        * "wikishared" for cross-wiki ExtensionStorage 
+        * "wikishared" for cross-wiki ExtensionStorage
         * "staging" for user-writable ad-hoc tests and analysis
     * `use_x1`: whether to the connect to the given database on the
       ExtensionStorage replica (only works for wiki databases or "wikishared").
@@ -142,20 +144,20 @@ def run(
       set a columns or columns as the index. If using raw format, has no
       effect.
     """
-    
+
     # Make single command and database parameters lists
     commands = ensure_list(commands)
     dbs = ensure_list(dbs)
-    
+
     results = []
-        
+
     if format == "pandas":
         for db in dbs:
             connection = connect(db, use_x1)
             result = run_to_pandas(connection, commands, date_col, index_col)
             connection.close()
             results.append(result)
-        
+
         if len(dbs) > 1:
             # Ignore the indexes on the partial results unless a custom index
             # column was designated
@@ -163,11 +165,11 @@ def run(
                 ignore_index = True
             else:
                 ignore_index = False
-                
+
             return pd.concat(results, ignore_index=ignore_index)
         else:
             return results[0]
-    
+
     elif format == "raw":
         for db in dbs:
             connection = connect(db, use_x1)
@@ -178,13 +180,13 @@ def run(
         if len(dbs) > 1:
             # Take the first set of column names since they'll all be the same
             column_names = results[0].column_names
-            
+
             record_sets = [result.records for result in results]
             records = [x for x in chain(record_sets)]
-            
+
             return ResultSet(column_names, records)
         else:
             return results[0]
-    
+
     else:
         raise ValueError("The format you specified is not supported.")
