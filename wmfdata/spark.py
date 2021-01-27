@@ -1,7 +1,7 @@
 from threading import Timer
 
 import findspark
-findspark.init('/usr/lib/spark2')
+findspark.init("/usr/lib/spark2")
 from pyspark.sql import SparkSession
 
 from wmfdata.utils import check_kerberos_auth, ensure_list
@@ -10,48 +10,48 @@ from wmfdata.utils import check_kerberos_auth, ensure_list
 Predefined spark sessions and configs for use with the get_session and run functions.
 """
 PREDEFINED_SPARK_SESSIONS = {
-    'local': {
-        'master': 'local[2]',  # [2] means use 2 local worker threads
-        'config': {
-            'spark.driver.memory': '4g',
+    "local": {
+        "master": "local[2]",  # [2] means use 2 local worker threads
+        "config": {
+            "spark.driver.memory": "4g",
         }
     },
-    'yarn': {
-        'master': 'yarn',
-        'config': {
-            'spark.driver.memory': '2g',
-            'spark.dynamicAllocation.maxExecutors': 64,
-            'spark.executor.memory': '8g',
-            'spark.executor.cores': 4,
-            'spark.sql.shuffle.partitions': 256
+    "yarn-regular": {
+        "master": "yarn",
+        "config": {
+            "spark.driver.memory": "2g",
+            "spark.dynamicAllocation.maxExecutors": 64,
+            "spark.executor.memory": "8g",
+            "spark.executor.cores": 4,
+            "spark.sql.shuffle.partitions": 256
         }
     },
-    'yarn-large': {
-        'master': 'yarn',
-        'config': {
-            'spark.driver.memory': '4g',
-            'spark.dynamicAllocation.maxExecutors': 128,
-            'spark.executor.memory': '8g',
-            'spark.executor.cores': 4,
-            'spark.sql.shuffle.partitions': 512
+    "yarn-large": {
+        "master": "yarn",
+        "config": {
+            "spark.driver.memory": "4g",
+            "spark.dynamicAllocation.maxExecutors": 128,
+            "spark.executor.memory": "8g",
+            "spark.executor.cores": 4,
+            "spark.sql.shuffle.partitions": 512
         }
     }
 }
 
-# Add previous session 'type' keys for backwards compatibility.
-PREDEFINED_SPARK_SESSIONS['regular'] = PREDEFINED_SPARK_SESSIONS['yarn']
-PREDEFINED_SPARK_SESSIONS['large'] = PREDEFINED_SPARK_SESSIONS['yarn-large']
+# Add previous session "type" keys for backwards compatibility.
+PREDEFINED_SPARK_SESSIONS["regular"] = PREDEFINED_SPARK_SESSIONS["yarn-regular"]
+PREDEFINED_SPARK_SESSIONS["large"] = PREDEFINED_SPARK_SESSIONS["yarn-large"]
 
 EXTRA_JAVA_OPTIONS = {
-    'http.proxyHost': 'webproxy.eqiad.wmnet',
-    'http.proxyPort': '8080',
-    'https.proxyHost': 'webproxy.eqiad.wmnet',
-    'https.proxyPort': '8080'
+    "http.proxyHost": "webproxy.eqiad.wmnet",
+    "http.proxyPort": "8080",
+    "https.proxyHost": "webproxy.eqiad.wmnet",
+    "https.proxyPort": "8080"
 }
 
 def get_custom_session(
-    master='local[2]',
-    app_name='wmfdata-custom',
+    master="local[2]",
+    app_name="wmfdata-custom",
     spark_config={}
 ):
     """
@@ -94,7 +94,7 @@ def get_custom_session(
     return builder.getOrCreate()
 
 def get_session(
-    type="yarn",
+    type="yarn-regular",
     app_name=None,
     extra_settings={}
 ):
@@ -102,16 +102,17 @@ def get_session(
     Returns a Spark session based on one of the PREDEFINED_SPARK_SESSION types.
 
     Arguments:
-    * `session_type`: the type of Spark session to create.
-        * "local": Run the command in a local Spark process.
-        * "yarn": the default; able to use up to 15% of Hadoop cluster
+    * `type`: the type of Spark session to create.
+        * "local": Run the command in a local Spark process. Use this for
+          prototyping or querying small-ish data (less than a couple of GB).
+        * "yarn-regular": the default; able to use up to 15% of Hadoop cluster
           resources (This is the default).
         * "yarn-large": for queries which require more processing (e.g. joins) or
           which access more data; able to use up to 30% of Hadoop cluster
           resources.
     * `extra_settings`: A dict of additional Spark configs to use when creating
       the Spark session. These will override the defaults specified
-      by `session_type`.
+      by `type`.
     """
 
     if type not in PREDEFINED_SPARK_SESSIONS.keys():
@@ -179,7 +180,7 @@ def start_session_timeout(session, timeout_seconds=3600):
     session_timeouts[application_id] = timeout
     timeout.start()
 
-def run(commands, format="pandas", session_type="yarn", extra_settings={}):
+def run(commands, format="pandas", session_type="yarn-regular", extra_settings={}):
     """
     Runs SQL commands against the Hive tables in the Data Lake using the
     PySpark SQL interface.
@@ -198,8 +199,9 @@ def run(commands, format="pandas", session_type="yarn", extra_settings={}):
         * "pandas": a Pandas data frame
         * "raw": a list of tuples, as returned by the Spark SQL interface.
     * `session_type`: the type of Spark session to create.
-        * "local": Run the command in a local Spark process.
-        * "yarn": the default; able to use up to 15% of Hadoop cluster
+        * "local": Run the command in a local Spark process. Use this for
+          prototyping or querying small-ish data (less than a couple of GB).
+        * "yarn-regular": the default; able to use up to 15% of Hadoop cluster
           resources
         * "yarn-large": for queries which require more processing (e.g. joins) or
           which access more data; able to use up to 30% of Hadoop cluster
