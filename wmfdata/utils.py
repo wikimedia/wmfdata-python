@@ -1,5 +1,6 @@
 import sys
 from math import log10, floor
+import os.path
 import re
 import requests
 import subprocess
@@ -141,3 +142,20 @@ def ensure_list(str_or_list):
         return [str_or_list]
     else:
         return str_or_list
+
+def get_dblist(dblist_name, dblist_path="/srv/mediawiki-config/dblists"):
+    """
+    Given the name of a dblist (e.g. "wikipedia", "closed", "group0"), return the wiki database names in that list.
+
+    To see all the dblists, visit:
+    https://github.com/wikimedia/operations-mediawiki-config/tree/master/dblists
+    """
+
+    path = os.path.join(dblist_path, dblist_name + ".dblist")
+    with open(path) as list_file:
+        lines = list_file.readlines()
+
+    lines = map(str.strip, lines)
+    lines = filter(lambda w: not w.startswith("#"), lines)
+    return list(lines)
+
