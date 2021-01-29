@@ -58,10 +58,9 @@ def run_cli(
     merged_commands = ";\n".join(commands)
     
     try:
-        # Create temporary files in current working directory to write to:
-        cwd = os.getcwd()
-        query_fd, query_path = tempfile.mkstemp(suffix=".hql", dir=cwd)
-        results_fd, results_path = tempfile.mkstemp(suffix=".tsv", dir=cwd)
+        # Create temporary files to hold the query and result
+        query_fd, query_path = tempfile.mkstemp(suffix=".hql")
+        results_fd, results_path = tempfile.mkstemp(suffix=".tsv")
 
         # Write the Hive query:
         with os.fdopen(query_fd, 'w') as fp:
