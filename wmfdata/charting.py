@@ -1,5 +1,7 @@
-from matplotlib import style as mpl_style
-from matplotlib import ticker
+from matplotlib import (
+    style as mpl_style,
+    ticker
+)
 
 styles = {
     "font.size": 16,

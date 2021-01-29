@@ -1,13 +1,13 @@
-import sys
 from math import log10, floor
 import os.path
 import re
-import requests
 import subprocess
-from packaging import version
+import sys
 
 from IPython.display import HTML
+from packaging import version
 import pandas as pd
+import requests
 
 def print_err(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
