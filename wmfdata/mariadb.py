@@ -9,8 +9,7 @@ import subprocess
 import mysql.connector as mysql
 import pandas as pd
 
-from wmfdata.utils import ensure_list, print_err
-
+from wmfdata.utils import ensure_list
 
 connection=None
 # Close any open connections at exit

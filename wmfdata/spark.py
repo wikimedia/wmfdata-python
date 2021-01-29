@@ -4,7 +4,10 @@ import findspark
 findspark.init("/usr/lib/spark2")
 from pyspark.sql import SparkSession
 
-from wmfdata.utils import check_kerberos_auth, ensure_list
+from wmfdata.utils import (
+    check_kerberos_auth,
+    ensure_list
+)
 
 """
 Predefined spark sessions and configs for use with the get_session and run functions.

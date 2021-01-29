@@ -6,8 +6,10 @@ import subprocess
 import tempfile
 
 import pandas as pd
+
 from wmfdata.utils import (
-    check_kerberos_auth, ensure_list, mediawiki_dt, print_err
+    check_kerberos_auth,
+    ensure_list
 )
 
 def run_cli(
