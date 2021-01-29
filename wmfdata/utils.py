@@ -27,21 +27,21 @@ def num_str(x, n_figs=2):
         return "{:,}".format(sigfigified)
     except (ValueError, TypeError): # Catch numpy.NaNs and Nones
         return None
-    
+
 def pd_display_all(df):
     with pd.option_context(
-        "display.max_rows", None, 
+        "display.max_rows", None,
         "display.max_columns", None,
         "display.max_colwidth", -1,
     ):
         display(df)
-        
+
 def insert_code_toggle():
     """
     Outputs a button that will show or hide the code cells in exported HTML
     versions of the notebook.
     """
-    
+
     # Based on a StackOverflow answer by harshil
     # https://stackoverflow.com/a/28073228/2509972
     display(HTML("""
@@ -73,7 +73,7 @@ def insert_code_toggle():
     $(document).ready(code_toggle);
     </script>
     """))
-    
+
 def mediawiki_dt(dt):
     """
     Converts a Python datetime.datetime object to the string datetime form
@@ -85,7 +85,7 @@ def df_to_remarkup(df):
     """
     Prints a Pandas dataframe as a Remarkup table suitable for pasting into
     Phabricator.
-    
+
     Best used via the `pipe`, as in `my_dataframe.pipe(df_to_remarkup)`.
     """
     # To-do: allow printing indexes
@@ -97,20 +97,20 @@ def df_to_remarkup(df):
         # Pad every pipe with spaces so the markup is easier to read
         .replace("|", " | ")
     )
-    
+
     # Add a pipe to the start of every line, before adding the header separator
     # so it doesn't get a double first pipe
     remarkup_table = re.sub(r"^([^|])", r"| \1", psv_table, flags=re.MULTILINE)
     # Make the first row a header
     remarkup_table = remarkup_table.replace("\n", "\n" + header_sep + "\n", 1)
-    
+
     print(remarkup_table)
 
 def check_remote_version(source_url, local_version):
     r = requests.get(source_url + "/raw/master/wmfdata/metadata.py")
     # Raise an error if the page couldn't be loaded
     r.raise_for_status()
-    
+
     remote_version = re.search('(([0-9]+\\.?){2,3})', r.text).group()
 
     d = {
@@ -158,4 +158,3 @@ def get_dblist(dblist_name, dblist_path="/srv/mediawiki-config/dblists"):
     lines = map(str.strip, lines)
     lines = filter(lambda w: not w.startswith("#"), lines)
     return list(lines)
-

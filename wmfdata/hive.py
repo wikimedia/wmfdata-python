@@ -56,7 +56,7 @@ def run_cli(
     # queries have been passed or separate their output, so it's not worth
     # the effort.
     merged_commands = ";\n".join(commands)
-    
+
     try:
         # Create temporary files to hold the query and result
         query_fd, query_path = tempfile.mkstemp(suffix=".hql")
@@ -146,7 +146,7 @@ def load_csv(
     function strips it before uploading, because Hive treats all rows as
     data rows.
     """
-    
+
     create_db_cmd = """
     CREATE DATABASE IF NOT EXISTS {db_name}
     """
@@ -154,7 +154,7 @@ def load_csv(
     drop_table_cmd = """
     DROP TABLE IF EXISTS {db_name}.{table_name}
     """
-    
+
     create_table_cmd = """
     CREATE TABLE {db_name}.{table_name} ({field_spec})
     ROW FORMAT DELIMITED FIELDS TERMINATED BY "{sep}"
@@ -164,7 +164,7 @@ def load_csv(
     LOAD DATA LOCAL INPATH "{path}"
     OVERWRITE INTO TABLE {db_name}.{table_name}
     """
-    
+
     try:
         if headers:
             __, tmp_path = tempfile.mkstemp()
@@ -173,7 +173,7 @@ def load_csv(
                 source.readline()
                 copyfileobj(source, target)
             path = tmp_path
-   
+
         cmd_params = {
             "db_name": db_name,
             "field_spec": field_spec,
