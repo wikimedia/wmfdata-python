@@ -12,7 +12,7 @@ styles = {
 
 def set_mpl_style():
     mpl_style.use(styles)
-    
+
 def M_str(x, pos):
     n = int(round(x / 1000000))
     return "{n} M".format(n=n)
