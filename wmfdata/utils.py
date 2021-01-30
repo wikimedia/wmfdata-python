@@ -107,7 +107,7 @@ def df_to_remarkup(df):
     print(remarkup_table)
 
 def check_remote_version(source_url, local_version):
-    r = requests.get(source_url + "/raw/master/wmfdata/metadata.py")
+    r = requests.get(source_url + "/raw/release/wmfdata/metadata.py")
     # Raise an error if the page couldn't be loaded
     r.raise_for_status()
 
