@@ -4,6 +4,7 @@ import re
 from shutil import copyfileobj
 import subprocess
 import tempfile
+import warnings
 
 import pandas as pd
 
@@ -37,6 +38,11 @@ def run_cli(
     commands = ensure_list(commands)
     if format not in ["pandas", "raw"]:
         raise ValueError("'{}' is not a valid format.".format(format))
+    if format == "raw":
+        warnings.warn(
+            "The 'raw' format is deprecated. It will be removed in the next major release.",
+            category=FutureWarning
+        )
     check_kerberos_auth()
 
     shell_command = "export HADOOP_HEAPSIZE={0} && "

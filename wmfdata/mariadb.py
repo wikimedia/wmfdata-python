@@ -4,6 +4,7 @@ import getpass
 import grp
 from itertools import chain
 import subprocess
+import warnings
 
 # https://pypi.org/project/mysql-connector-python/
 import mysql.connector as mysql
@@ -143,6 +144,12 @@ def run(
       set a columns or columns as the index. If using raw format, has no
       effect.
     """
+
+    if format == "raw":
+        warnings.warn(
+            "The 'raw' format is deprecated. It will be removed in the next major release.",
+            category=FutureWarning
+        )
 
     # Make single command and database parameters lists
     commands = ensure_list(commands)
