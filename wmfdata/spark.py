@@ -1,4 +1,5 @@
 from threading import Timer
+import warnings
 
 import findspark
 findspark.init("/usr/lib/spark2")
@@ -216,6 +217,12 @@ def run(commands, format="pandas", session_type="yarn-regular", extra_settings={
 
     if format not in ["pandas", "raw"]:
         raise ValueError("The `format` should be either `pandas` or `raw`.")
+    if format == "raw":
+        warnings.warn(
+            "The 'raw' format is deprecated. It will be removed in the next major release.",
+            category=FutureWarning
+        )
+
     commands = ensure_list(commands)
 
     result = None
