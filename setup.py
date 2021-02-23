@@ -25,7 +25,7 @@ setup(
         "pandas>=0.20.1", # 0.20.1 introduced the errors module
         "packaging",
         "requests",
-        "requests_kerberos"
+        "requests_kerberos",
         "presto-python-client"
     ],
     packages=find_packages(),
