@@ -1,25 +1,20 @@
 `wmfdata` is an Python package for analyzing Wikimedia data on Wikimedia's [non-public](https://wikitech.wikimedia.org/wiki/Analytics/Data_access#Production_access) [analytics clients](https://wikitech.wikimedia.org/wiki/Analytics/Systems/Clients). It is maintained by the [Wikimedia Foundation Product Analytics team](https://www.mediawiki.org/wiki/Product_Analytics).
 
 ## Features
-wmfdata's most popular feature is SQL data access. The `hive.run`, `spark.run`, and `mariadb.run` functions allow you to run commands against these different data sources and receive the results as a Pandas dataframe in one line of code.
+wmfdata's most popular feature is SQL data access. The `hive.run`, `spark.run`, `presto.run`, and `mariadb.run` functions allow you to run commands using these different query engines and receive the results as a Pandas dataframe in one line of code.
 
 Other features include:
-* Easy generation of Spark sessions using `spark.get_session`
+* Easy generation of Spark sessions using `spark.get_session` (or `spark.get_custom_session` if you want to fine-tine the settings)
 * Loading CSV or TSV files into Hive using `hive.load_csv`
 * Turning cryptic Kerberos-related errors into clear reminders to renew your Kerberos credentials
 
-
-## Installation
-You should be able to install the latest version of package using the following terminal command:
-```
-pip install git+https://github.com/wikimedia/wmfdata-python.git@release
-```
-
-## Upgrading
-If you have an older version of wmfdata and want to upgrade, simply add the `--upgrade` flag to the command, resulting in the following:
+## Installation and upgrading
+To install the latest version of wmfdata, use the following command:
 ```
 pip install --upgrade git+https://github.com/wikimedia/wmfdata-python.git@release
 ```
+
+This works whether or not you have an older version installed.
 
 ## Troubleshooting
 ### Importing wmfdata fails with `AttributeError: module 'matplotlib.ticker' has no attribute 'PercentFormatter'`
