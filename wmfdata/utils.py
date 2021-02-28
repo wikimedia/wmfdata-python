@@ -1,3 +1,4 @@
+import logging
 from math import log10, floor
 import os.path
 import re
@@ -8,6 +9,19 @@ from IPython.display import HTML
 from packaging import version
 import pandas as pd
 import requests
+
+"""
+Global wmfdata.utils.log logger.  Usage:
+
+from wmfdata.utils import log
+log.info("my message")
+"""
+log = logging.getLogger('wmfdata')
+log.setLevel(logging.INFO)
+formatter = logging.Formatter(fmt='%(asctime)s %(levelname)s %(name)s: %(message)s', datefmt='%Y-%m-%dT%H:%M:%S')
+handler = logging.StreamHandler(sys.stdout)
+handler.setFormatter(formatter)
+log.addHandler(handler)
 
 def print_err(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
@@ -53,9 +67,9 @@ def insert_code_toggle():
           style="font-size: 1.4em"
         >
     </form>
-    
+
     <script>
-    code_shown = true; 
+    code_shown = true;
 
     function code_toggle() {
         if (code_shown) {
@@ -158,3 +172,11 @@ def get_dblist(dblist_name, dblist_path="/srv/mediawiki-config/dblists"):
     lines = map(str.strip, lines)
     lines = filter(lambda w: not w.startswith("#"), lines)
     return list(lines)
+
+def python_version():
+    """
+    Returns currently running python major.minor version. E.g "3.7"
+    """
+    return f"{sys.version_info.major}.{sys.version_info.minor}"
+
+
