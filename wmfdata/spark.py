@@ -53,12 +53,16 @@ PREDEFINED_SPARK_SESSIONS = {
 PREDEFINED_SPARK_SESSIONS["regular"] = PREDEFINED_SPARK_SESSIONS["yarn-regular"]
 PREDEFINED_SPARK_SESSIONS["large"] = PREDEFINED_SPARK_SESSIONS["yarn-large"]
 
-EXTRA_JAVA_OPTIONS = {
-    "http.proxyHost": "webproxy.eqiad.wmnet",
-    "http.proxyPort": "8080",
-    "https.proxyHost": "webproxy.eqiad.wmnet",
-    "https.proxyPort": "8080"
-}
+# Any environment variables here will be set in all Spark processes
+# via spark.executorEnv and spark.yarn.appMasterEnv settings.
+ENV_VARS_TO_PROPAGATE = [
+    # Always propagate http proxy settings.
+    # -Djava.net.useSystemProxies=true should be set in extraJavaOptions for this to work.
+    # WMF sets java.net.useSystemProxies=true in spark-defaults.conf, so we don't need to set it here.
+    'http_proxy',
+    'https_proxy',
+    'no_proxy',
+]
 
 def get_custom_session(
     master="local[2]",
@@ -145,7 +149,7 @@ def get_custom_session(
     findspark.init(SPARK_HOME)
     from pyspark.sql import SparkSession
 
-    # TODO: if there's an existing session, it will be returned with its
+    # NOTE: if there's an existing session, it will be returned with its
     # existing settings even if the user has specified a different set of
     # settings in this function call. There will be no indication that
     # this has happened.
@@ -153,13 +157,15 @@ def get_custom_session(
         SparkSession.builder
         .master(master)
         .appName(app_name)
-        .config(
-            "spark.driver.extraJavaOptions",
-            " ".join(
-              "-D{}={}".format(k, v) for k, v in EXTRA_JAVA_OPTIONS.items()
-            )
-        )
     )
+
+    # All ENV_VARS_TO_PROPAGATE should be set in all Spark processes.
+    for var in ENV_VARS_TO_PROPAGATE:
+        if var in os.environ:
+            builder.config(f"spark.executorEnv.{var}", os.environ[var])
+            # NOTE: Setting the var in appMasterEnv will only have an effect if
+            # running in yarn cluster mode.
+            builder.config(f"spark.yarn.appMasterEnv.{var}", os.environ[var])
 
     # Apply any provided spark configs.
     for k, v in spark_config.items():
