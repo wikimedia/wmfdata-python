@@ -10,19 +10,6 @@ from packaging import version
 import pandas as pd
 import requests
 
-"""
-Global wmfdata.utils.log logger.  Usage:
-
-from wmfdata.utils import log
-log.info("my message")
-"""
-log = logging.getLogger('wmfdata')
-log.setLevel(logging.INFO)
-formatter = logging.Formatter(fmt='%(asctime)s %(levelname)s %(name)s: %(message)s', datefmt='%Y-%m-%dT%H:%M:%S')
-handler = logging.StreamHandler(sys.stdout)
-handler.setFormatter(formatter)
-log.addHandler(handler)
-
 def print_err(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
 

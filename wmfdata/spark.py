@@ -8,8 +8,8 @@ from wmfdata import conda
 from wmfdata.utils import (
     check_kerberos_auth,
     ensure_list,
-    python_version,
-    log
+    print_err,
+    python_version
 )
 
 """
@@ -68,8 +68,8 @@ def get_custom_session(
     master="local[2]",
     app_name="wmfdata-custom",
     spark_config={},
-    ship_python_env = False,
-    conda_pack_kwargs = {}
+    ship_python_env=False,
+    conda_pack_kwargs={}
 ):
     """
     Returns an existent SparkSession, or a new one if one hasn't yet been created.
@@ -115,7 +115,7 @@ def get_custom_session(
                 spark_config["spark.yarn.dist.archives"] += f",{conda_spark_archive}"
             else:
                 spark_config["spark.yarn.dist.archives"] = conda_spark_archive
-            log.info(f"Will ship {conda_packed_file} to remote Spark executors.")
+            print_err(f"Will ship {conda_packed_file} to remote Spark executors.")
 
             # Workers should use python from the unpacked conda env.
             os.environ["PYSPARK_PYTHON"] = f"{conda_packed_name}/bin/python3"
@@ -134,7 +134,7 @@ def get_custom_session(
             os.environ["PYSPARK_PYTHON"] = f"/usr/bin/python{python_version()}"
 
         if "PYSPARK_PYTHON" in os.environ:
-            log.info(
+            print_err(
                 "PySpark executors will use {}.".format(os.environ["PYSPARK_PYTHON"])
             )
 
