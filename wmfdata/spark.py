@@ -100,9 +100,9 @@ def get_custom_session(
       See https://conda.github.io/conda-pack/api.html#pack
       If True, this will fail if conda and conda_pack are not installed.
     """
-    if master == "yarn":
-        check_kerberos_auth()
+    check_kerberos_auth()
 
+    if master == "yarn":
         if ship_python_env:
             # The path to our packed conda environment.
             conda_packed_file = conda.pack(**conda_pack_kwargs)
