@@ -1,3 +1,4 @@
+import logging
 from math import log10, floor
 import os.path
 import re
@@ -53,9 +54,9 @@ def insert_code_toggle():
           style="font-size: 1.4em"
         >
     </form>
-    
+
     <script>
-    code_shown = true; 
+    code_shown = true;
 
     function code_toggle() {
         if (code_shown) {
@@ -158,3 +159,11 @@ def get_dblist(dblist_name, dblist_path="/srv/mediawiki-config/dblists"):
     lines = map(str.strip, lines)
     lines = filter(lambda w: not w.startswith("#"), lines)
     return list(lines)
+
+def python_version():
+    """
+    Returns currently running python major.minor version. E.g "3.7"
+    """
+    return f"{sys.version_info.major}.{sys.version_info.minor}"
+
+

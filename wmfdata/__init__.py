@@ -1,6 +1,6 @@
 # Import all submodules so they are accessible after `import wmfdata`. utils must go
-# first to prevent circular import issues. Other submodules can depend on utils ONLY.
-from wmfdata import utils
+# first to prevent circular import issues. Other submodules can depend on utils and/or conda ONLY.
+from wmfdata import utils, conda
 from wmfdata import (
     charting,
     hive,

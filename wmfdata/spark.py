@@ -1,14 +1,21 @@
 from threading import Timer
 import warnings
+import os
 
 import findspark
-findspark.init("/usr/lib/spark2")
-from pyspark.sql import SparkSession
 
+from wmfdata import conda
 from wmfdata.utils import (
     check_kerberos_auth,
-    ensure_list
+    ensure_list,
+    print_err,
+    python_version
 )
+
+"""
+Will be used for findspark.init().
+"""
+SPARK_HOME = os.environ.get("SPARK_HOME", "/usr/lib/spark2")
 
 """
 Predefined spark sessions and configs for use with the get_session and run functions.
@@ -46,17 +53,23 @@ PREDEFINED_SPARK_SESSIONS = {
 PREDEFINED_SPARK_SESSIONS["regular"] = PREDEFINED_SPARK_SESSIONS["yarn-regular"]
 PREDEFINED_SPARK_SESSIONS["large"] = PREDEFINED_SPARK_SESSIONS["yarn-large"]
 
-EXTRA_JAVA_OPTIONS = {
-    "http.proxyHost": "webproxy.eqiad.wmnet",
-    "http.proxyPort": "8080",
-    "https.proxyHost": "webproxy.eqiad.wmnet",
-    "https.proxyPort": "8080"
-}
+# Any environment variables here will be set in all Spark processes
+# via spark.executorEnv and spark.yarn.appMasterEnv settings.
+ENV_VARS_TO_PROPAGATE = [
+    # Always propagate http proxy settings.
+    # -Djava.net.useSystemProxies=true should be set in extraJavaOptions for this to work.
+    # WMF sets java.net.useSystemProxies=true in spark-defaults.conf, so we don't need to set it here.
+    'http_proxy',
+    'https_proxy',
+    'no_proxy',
+]
 
 def get_custom_session(
     master="local[2]",
     app_name="wmfdata-custom",
-    spark_config={}
+    spark_config={},
+    ship_python_env=False,
+    conda_pack_kwargs={}
 ):
     """
     Returns an existent SparkSession, or a new one if one hasn't yet been created.
@@ -69,13 +82,74 @@ def get_custom_session(
 
     Arguments:
     * `master`: passed to SparkSession.builder.master()
+      If this is "yarn" and and a conda env is active and and ship_python_env=False,
+      remote executors will be configured to use conda.conda_base_env_prefix(),
+      which defaults to anaconda-wmf. This should usually work as anaconda-wmf
+      is installed on all WMF YARN worker nodes.  If your conda environment
+      has required packages installed that are not in anaconda-wmf, set
+      ship_python_env=True.
     * `app_name`: passed to SparkSession.builder.appName().
     * `spark_config`: passed to SparkSession.builder.config()
+    * `ship_python_env`: If master='yarn' and this is True, a conda env will be packed
+      and shipped to remote Spark executors.  This is useful if your conda env
+      has Python or other packages that the executors will need to do their work.
+    * `conda_pack_kwargs`: Args to pass to conda_pack.pack(). If none are given, this will
+      call conda_pack.pack() with no args, causing the default currently active
+      conda environment to be packed.
+      You can pack and ship any conda environment by setting appropriate args here.
+      See https://conda.github.io/conda-pack/api.html#pack
+      If True, this will fail if conda and conda_pack are not installed.
     """
-
     check_kerberos_auth()
 
-    # TODO: if there's an existing session, it will be returned with its
+    if master == "yarn":
+        if ship_python_env:
+            # The path to our packed conda environment.
+            conda_packed_file = conda.pack(**conda_pack_kwargs)
+            # This will be used as the unpacked directory name in the YARN working directory.
+            conda_packed_name = os.path.splitext(os.path.basename(conda_packed_file))[0]
+
+            # Ship conda_packed_file to each YARN worker.
+            conda_spark_archive = f"{conda_packed_file}#{conda_packed_name}"
+            if "spark.yarn.dist.archives" in spark_config:
+                spark_config["spark.yarn.dist.archives"] += f",{conda_spark_archive}"
+            else:
+                spark_config["spark.yarn.dist.archives"] = conda_spark_archive
+            print_err(f"Will ship {conda_packed_file} to remote Spark executors.")
+
+            # Workers should use python from the unpacked conda env.
+            os.environ["PYSPARK_PYTHON"] = f"{conda_packed_name}/bin/python3"
+        # Else if conda is active, use the use the conda_base_env_prefix (anaconda-wmf)
+        # environment, as this should exist on all worker nodes.
+        elif conda.is_active():
+            os.environ["PYSPARK_PYTHON"] = os.path.join(
+                conda.conda_base_env_prefix(), "bin", "python3"
+            )
+        # Else use the system python.  We can't use any current conda or virtualenv python
+        # as these won't be present on the remote YARN workers.
+        # The python version workers should use must be the same as the currently
+        # running python version, so only set this if that version of python
+        # (e.g. python3.7) is installed in the system.
+        elif os.path.isfile(os.path.join(f"/usr/bin/python{python_version()}")):
+            os.environ["PYSPARK_PYTHON"] = f"/usr/bin/python{python_version()}"
+
+        if "PYSPARK_PYTHON" in os.environ:
+            print_err(
+                "PySpark executors will use {}.".format(os.environ["PYSPARK_PYTHON"])
+            )
+
+    # NOTE: We don't need to touch PYSPARK_PYTHON if master != yarn.
+    # The default set by findspark will be fine.
+
+    # Call findspark.init after PYSPARK_PYTHON has possibly been set.
+    # This is needed because findspark will set PYSPARK_PYTHON path
+    # to sys.executable if it isn't yet set, which will likely not
+    # work in YARN mode if sys.executlable is a local conda or virtualenv
+    # (as is the case in WMF Jupyter Notebooks).
+    findspark.init(SPARK_HOME)
+    from pyspark.sql import SparkSession
+
+    # NOTE: if there's an existing session, it will be returned with its
     # existing settings even if the user has specified a different set of
     # settings in this function call. There will be no indication that
     # this has happened.
@@ -83,13 +157,15 @@ def get_custom_session(
         SparkSession.builder
         .master(master)
         .appName(app_name)
-        .config(
-            "spark.driver.extraJavaOptions",
-            " ".join(
-              "-D{}={}".format(k, v) for k, v in EXTRA_JAVA_OPTIONS.items()
-            )
-        )
     )
+
+    # All ENV_VARS_TO_PROPAGATE should be set in all Spark processes.
+    for var in ENV_VARS_TO_PROPAGATE:
+        if var in os.environ:
+            builder.config(f"spark.executorEnv.{var}", os.environ[var])
+            # NOTE: Setting the var in appMasterEnv will only have an effect if
+            # running in yarn cluster mode.
+            builder.config(f"spark.yarn.appMasterEnv.{var}", os.environ[var])
 
     # Apply any provided spark configs.
     for k, v in spark_config.items():
@@ -100,7 +176,8 @@ def get_custom_session(
 def get_session(
     type="yarn-regular",
     app_name=None,
-    extra_settings={}
+    extra_settings={},
+    ship_python_env=False,
 ):
     """
     Returns a Spark session based on one of the PREDEFINED_SPARK_SESSION types.
@@ -117,6 +194,9 @@ def get_session(
     * `extra_settings`: A dict of additional Spark configs to use when creating
       the Spark session. These will override the defaults specified
       by `type`.
+    * `ship_python_env`: If master='yarn' and this is True, a conda env will be packed
+      and shipped to remote Spark executors.  This is useful if your active conda env
+      has Python or other packages that the executors will need to do their work.
     """
 
     if type not in PREDEFINED_SPARK_SESSIONS.keys():
@@ -135,7 +215,8 @@ def get_session(
     return get_custom_session(
         master=PREDEFINED_SPARK_SESSIONS[type]["master"],
         app_name=app_name,
-        spark_config=config
+        spark_config=config,
+        ship_python_env=ship_python_env
     )
 
 
