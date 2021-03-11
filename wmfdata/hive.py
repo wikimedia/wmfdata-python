@@ -166,6 +166,7 @@ def load_csv(
     create_table_cmd = """
     CREATE TABLE {db_name}.{table_name} ({field_spec})
     ROW FORMAT DELIMITED FIELDS TERMINATED BY "{sep}"
+    STORED AS TEXTFILE
     """
 
     load_table_cmd = """
