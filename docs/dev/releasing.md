@@ -7,4 +7,4 @@ To release a new version of wmfdata-python:
 1. Commit your changes using the commit message "Make version X.Y.Z".
 1. Tag the commit you just made with the version (`git tag vX.Y.Z`).
 1. Checkout the `release` branch and rebase it onto `master`. This is the step that will trigger update notification to users.
-1. If the release is significant, announce it to `analytics-annouce@lists.wikimedia.org`.
+1. If the release is significant, announce it to `analytics-announce@lists.wikimedia.org`.
