@@ -1,3 +1,8 @@
+# 1.2 (11 March 2021)
+* With the help of a new `conda` module, the `spark` module has been revised to take advantage of the capabilities of the new conda-based Jupyter setup currently in development. Most significantly, the module now supports shipping a local conda to the Spark workers if custom dependencies are needed.
+* The on-import update check now times out after 1 second to prevent long waits when the web request fails to complete (as when the `https_proxy` environment variable is not set).
+* `hive_load_csv` now properly defines the file format of the new table. The previous behavior started to cause errors after Hive's default file format was changed from text to Parquet.
+
 # 1.1 (23 February 2021)
 * The new `presto` module supports querying the Data Lake using [Presto](https://wikitech.wikimedia.org/wiki/Analytics/Systems/Presto).
 * The `spark` module has been refactored to support local and custom sessions.
