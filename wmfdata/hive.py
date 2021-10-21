@@ -1,25 +1,25 @@
-import datetime as dt
 import os
-import re
-from shutil import copyfileobj
-import subprocess
+import pwd
 import tempfile
-import warnings
-
 import pandas as pd
 
+from pyhive import hive
+from shutil import copyfileobj
 from wmfdata.utils import (
-    check_kerberos_auth,
     ensure_list
 )
 
+HIVE_URL = 'analytics-hive.eqiad.wmnet'
+KERBEROS_SERVICE_NAME = 'hive'
+
+
 def run_cli(
-  commands, format = "pandas", heap_size = 1024, use_nice = True,
-  use_ionice = True
+    commands, format="pandas", heap_size=1024, use_nice=True,
+    use_ionice=True
 ):
     """
-    Runs SQL commands against the Hive tables in the Data Lake using Hive's
-    command line interface.
+    [DEPRECATED] Formerly ran SQL commands against the Hive tables in the Data Lake
+    using Hive's command line interface.  Currently just calls `run`.
 
     Arguments:
     * `commands`: the SQL to run. A string for a single command or a list of
@@ -31,30 +31,32 @@ def run_cli(
         * "raw": a TSV string, as returned by the command line interface.
     * `heap_size`: the amount of memory available to the Hive client. Increase
       this if a command experiences an out of memory error.
-    * `use_nice`: Run with a lower priority for processor usage.
-    * `use_ionice`: Run with a lower priority for disk access.
+    * `use_nice`: [Deprecated]
+    * `use_ionice`: [Deprecated]
+    """
+    return run(commands, format, heap_size)
+
+
+def run(commands, format="pandas", heap_size=1024):
+    """
+    Runs SQL commands against the Hive tables in the Data Lake.
+
+    Arguments:
+    * `commands`: the SQL to run. A string for a single command or a list of
+      strings for multiple commands within the same session (useful for things
+      like setting session variables). Passing more than one query is *not*
+      supported, and will usually result in an error.
+    * `format`: what format to return the results in
+        * "pandas": a Pandas data frame
+        * "raw": a TSV string, as returned by the command line interface.
+    * `heap_size`: the amount of memory available to the Hive client. Increase
+      this if a command experiences an out of memory error.
     """
 
-    commands = ensure_list(commands)
     if format not in ["pandas", "raw"]:
-        raise ValueError("'{}' is not a valid format.".format(format))
-    if format == "raw":
-        warnings.warn(
-            "The 'raw' format is deprecated. It will be removed in the next major release.",
-            category=FutureWarning
-        )
-    check_kerberos_auth()
+        raise ValueError("The `format` should be either `pandas` or `raw`.")
 
-    shell_command = "export HADOOP_HEAPSIZE={0} && "
-    if use_nice:
-        shell_command += "/usr/bin/nice "
-    if use_ionice:
-        shell_command += "/usr/bin/ionice "
-    shell_command += "/usr/bin/hive -S -f {1}"
-
-    result = None
-
-    # Support multiple commands by concatenating them in one file. If the user
+    # Support multiple commands by concatenating them with ";". If the user
     # has passed more than one query, this will result in a error when Pandas
     # tries to read the resulting concatenated output (unless the queries
     # happen to produce the same number of columns).
@@ -63,77 +65,23 @@ def run_cli(
     # error ourselves. However, there's no simple way to determine if multiple
     # queries have been passed or separate their output, so it's not worth
     # the effort.
-    merged_commands = ";\n".join(commands)
+    commands = ";\n".join(ensure_list(commands))
 
-    try:
-        # Create temporary files to hold the query and result
-        query_fd, query_path = tempfile.mkstemp(suffix=".hql")
-        results_fd, results_path = tempfile.mkstemp(suffix=".tsv")
+    connect_kwargs = {
+        'host': HIVE_URL,
+        'auth': 'KERBEROS',
+        'username': pwd.getpwuid(os.getuid()).pw_name,
+        'kerberos_service_name': KERBEROS_SERVICE_NAME,
+    }
+    with hive.connect(**connect_kwargs) as conn:
+        if format == "pandas":
+            return pd.read_sql(commands, conn)
+        if format == "raw":
+            cursor = conn.cursor()
+            cursor.execute(commands)
+            return cursor.fetchall()
 
-        # Write the Hive query:
-        with os.fdopen(query_fd, 'w') as fp:
-            fp.write(merged_commands)
 
-        # Execute the Hive query:
-        shell_command = shell_command.format(heap_size, query_path)
-        hive_call = subprocess.run(
-          shell_command,
-          shell=True,
-          stdout=results_fd,
-          stderr=subprocess.PIPE
-        )
-        if hive_call.returncode == 0:
-            # Read the results upon successful execution of cmd:
-            if format == "pandas":
-                try:
-                    result = pd.read_csv(results_path, sep='\t')
-                except pd.errors.EmptyDataError:
-                    # The command had no output
-                    pass
-            else:
-                # If user requested "raw" results, read the text file as-is:
-                with open(results_path, 'r') as file:
-                    content = file.read()
-                    # If the statement had output:
-                    if content:
-                        result = content
-        # If the hive call has not completed successfully
-        else:
-            # Remove logspam from the standard error so it's easier to see
-            # the actual error
-            stderr = iter(hive_call.stderr.decode().splitlines())
-            cleaned_stderr = ""
-            for line in stderr:
-                filter = r"JAVA_TOOL_OPTIONS|parquet\.hadoop|WARN:|:WARN|SLF4J"
-                if re.search(filter, line) is None:
-                    cleaned_stderr += line + "\n"
-
-            raise ChildProcessError(
-                "The Hive command line client encountered the following "
-                "error:\n{}".format(cleaned_stderr)
-            )
-    finally:
-        # Remove temporary files:
-        os.unlink(query_path)
-        os.unlink(results_path)
-
-    return result
-
-def run(commands, format="pandas", engine="cli"):
-    """
-    Runs SQL commands against the Hive tables in the Data Lake. Currently,
-    this simply passes the commands to the `run_cli` function.
-    """
-
-    if format not in ["pandas", "raw"]:
-        raise ValueError("The `format` should be either `pandas` or `raw`.")
-    if engine not in ["cli"]:
-        raise ValueError("'{}' is not a valid engine.".format(engine))
-    commands = ensure_list(commands)
-
-    result = None
-    if engine == "cli":
-        return run_cli(commands, format)
 
 def load_csv(
     path, field_spec, db_name, table_name,
