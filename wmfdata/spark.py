@@ -306,24 +306,28 @@ def run(commands, format="pandas", session_type="yarn-regular", extra_settings={
 
     commands = ensure_list(commands)
 
-    result = None
     # TODO: Switching the Spark session type has no effect if the previous
     # session is still running.
     spark_session = get_session(
       type=session_type,
       extra_settings=extra_settings
     )
+    
+    overall_result = None
+
     for cmd in commands:
         cmd_result = spark_session.sql(cmd)
         # If the result has columns, the command was a query and therefore
         # results-producing. If not, it was a DDL or DML command and not
         # results-producing.
         if len(cmd_result.columns) > 0:
-            uncollected_result = cmd_result
-    if uncollected_result and format == "pandas":
-        result = uncollected_result.toPandas()
-    elif format == "raw":
-        result = uncollected_result.collect()
+            overall_result = cmd_result
+    
+    if overall_result:
+        if format == "pandas":
+            overall_result = overall_result.toPandas()
+        elif format == "raw":
+            overall_result = overall_result.collect()
 
     # (re)start a timeout on SparkSessions in Yarn after the result is collected.
     # A SparkSession used by this run function
@@ -331,4 +335,4 @@ def run(commands, format="pandas", session_type="yarn-regular", extra_settings={
     if PREDEFINED_SPARK_SESSIONS[session_type]["master"] == "yarn":
         start_session_timeout(spark_session, 3600)
 
-    return result
+    return overall_result
