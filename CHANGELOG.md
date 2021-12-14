@@ -1,17 +1,13 @@
 # 1.2 (11 March 2021)
-* With the help of a new `conda` module, the `spark` module has been revised to take advantage of the capabilities of the new conda-based Jupyter setup currently in development. Most significantly, the module now supports shipping a local conda to the Spark workers if custom dependencies are needed.
+* With the help of a new `conda` module, the `spark` module has been revised to take advantage of the capabilities of the new conda-based Jupyter setup currently in development. Most significantly, the module now supports shipping a local conda environment to the Spark workers if custom dependencies are needed.
 * The on-import update check now times out after 1 second to prevent long waits when the web request fails to complete (as when the `https_proxy` environment variable is not set).
-* `hive_load_csv` now properly defines the file format of the new table. The previous behavior started to cause errors after Hive's default file format was changed from text to Parquet.
+* `hive.load_csv` now properly defines the file format of the new table. The previous behavior started to cause errors after Hive's default file format was changed from text to Parquet.
 
 # 1.1 (23 February 2021)
 * The new `presto` module supports querying the Data Lake using [Presto](https://wikitech.wikimedia.org/wiki/Analytics/Systems/Presto).
 * The `spark` module has been refactored to support local and custom sessions.
 * A new `utils.get_dblist` function provides easy access to wiki database lists, which is particularly useful with `mariadb.run`.
-* The `hive.run_cli` function now creates its temp files in standard location, to avoid creating distracting new entries in the current working directory.
-
-# 1.0.4 (22 July 2020)
-* The code and documentation now reflect the repository's new location ([github.com/wikimedia/wmfdata-python](https://github.com/wikimedia/wmfdata-python)).
-* The repository now contains a pointer to the [code of conduct for Wikimedia technical spaces](https://www.mediawiki.org/wiki/Code_of_conduct).
+* The `hive.run_cli` function now creates its temp files in a standard location, to avoid creating distracting new entries in the current working directory.
 
 # 1.0.4 (22 July 2020)
 * The code and documentation now reflect the repository's new location ([github.com/wikimedia/wmfdata-python](https://github.com/wikimedia/wmfdata-python)).
