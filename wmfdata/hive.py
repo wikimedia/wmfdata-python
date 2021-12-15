@@ -2,6 +2,7 @@ import os
 import pwd
 import tempfile
 import pandas as pd
+import warnings
 
 from pyhive import hive
 from shutil import copyfileobj
@@ -9,8 +10,8 @@ from wmfdata.utils import (
     ensure_list
 )
 
-HIVE_URL = 'analytics-hive.eqiad.wmnet'
-KERBEROS_SERVICE_NAME = 'hive'
+HIVE_URL = "analytics-hive.eqiad.wmnet"
+KERBEROS_SERVICE_NAME = "hive"
 
 
 def run_cli(
@@ -34,10 +35,14 @@ def run_cli(
     * `use_nice`: [Deprecated]
     * `use_ionice`: [Deprecated]
     """
+    warnings.warn(
+        "'run_cli' is deprecated. It will be removed in the next major release.",
+        category=FutureWarning
+    )
     return run(commands, format, heap_size)
 
 
-def run(commands, format="pandas", heap_size=1024):
+def run(commands, format="pandas", heap_size=1024, engine="deprecated"):
     """
     Runs SQL commands against the Hive tables in the Data Lake.
 
@@ -56,6 +61,18 @@ def run(commands, format="pandas", heap_size=1024):
     if format not in ["pandas", "raw"]:
         raise ValueError("The `format` should be either `pandas` or `raw`.")
 
+    if heap_size != 1024:
+        warnings.warn(
+            "'heap_size' is not being applied. TODO: can pyhive set this somehow?",
+            category=FutureWarning
+        )
+
+    if engine != "deprecated":
+        warnings.warn(
+            "'engine' is deprecated. It will be removed in the next major release.",
+            category=FutureWarning
+        )
+
     # Support multiple commands by concatenating them with ";". If the user
     # has passed more than one query, this will result in a error when Pandas
     # tries to read the resulting concatenated output (unless the queries
@@ -68,10 +85,10 @@ def run(commands, format="pandas", heap_size=1024):
     commands = ";\n".join(ensure_list(commands))
 
     connect_kwargs = {
-        'host': HIVE_URL,
-        'auth': 'KERBEROS',
-        'username': pwd.getpwuid(os.getuid()).pw_name,
-        'kerberos_service_name': KERBEROS_SERVICE_NAME,
+        "host": HIVE_URL,
+        "auth": "KERBEROS",
+        "username": pwd.getpwuid(os.getuid()).pw_name,
+        "kerberos_service_name": KERBEROS_SERVICE_NAME,
     }
     with hive.connect(**connect_kwargs) as conn:
         if format == "pandas":
@@ -141,8 +158,8 @@ def load_csv(
         }
 
         if create_db:
-            run_cli(create_db_cmd.format(**cmd_params))
-        run_cli([
+            run(create_db_cmd.format(**cmd_params))
+        run([
             drop_table_cmd.format(**cmd_params),
             create_table_cmd.format(**cmd_params),
             load_table_cmd.format(**cmd_params)
