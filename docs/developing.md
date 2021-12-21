@@ -18,6 +18,7 @@ When you work on changes to this package, you will want an easily-accessible loc
 1. Update `CHANGELOG.md` with all of the noteworthy changes in the release.
 1. Commit your changes using the commit message "Make version X.Y.Z".
 1. Tag the commit you just made with the version (`git tag vX.Y.Z`).
-1. Push your new tag to the remote (`git push --tags`).
-1. Checkout the `release` branch and rebase it onto `master`. This is the step that will trigger update notification to users.
+1. Push your new commit and tag to the remote (`git push --tags`).
+1. Checkout the `release` branch and rebase it onto `master`. 
+1. Now push this branch to the remote. This is the step that will trigger update notification to users.
 1. If the release is significant, announce it to `analytics-announce@lists.wikimedia.org`.
