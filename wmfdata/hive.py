@@ -3,6 +3,7 @@ import pwd
 import tempfile
 import pandas as pd
 import warnings
+import subprocess
 
 from pyhive import hive
 from shutil import copyfileobj
@@ -142,24 +143,29 @@ def load_csv(
     """
 
     load_table_cmd = """
-    LOAD DATA LOCAL INPATH "{path}"
+    LOAD DATA INPATH "hdfs://{path}"
     OVERWRITE INTO TABLE {db_name}.{table_name}
     """
 
     try:
+        __, tmp_path = tempfile.mkstemp()
         if headers:
-            __, tmp_path = tempfile.mkstemp()
             with open(path, 'r') as source, open(tmp_path, 'w') as target:
                 # Consume the first line so it doesn't make it to the copy
                 source.readline()
                 copyfileobj(source, target)
             path = tmp_path
 
+        # Copy the file to HDFS because pyhive runs via JDBC not off the local client
+        hdfs_path = f"/tmp/{path}"
+        subprocess.run(["hdfs", "dfs", "-mkdir", "-p", hdfs_path])
+        subprocess.run(["hdfs", "dfs", "-put", path, hdfs_path])
+
         cmd_params = {
             "db_name": db_name,
             "field_spec": field_spec,
             # To do: Convert relative paths (e.g. "~/data.csv") into absolute paths
-            "path": path,
+            "path": hdfs_path,
             "sep": sep,
             "table_name": table_name
         }
@@ -172,4 +178,5 @@ def load_csv(
             load_table_cmd.format(**cmd_params)
         ])
     finally:
-        os.unlink(tmp_path)
+        if tmp_path:
+            os.unlink(tmp_path)
