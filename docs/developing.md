@@ -11,14 +11,17 @@ When you work on changes to this package, you will want an easily-accessible loc
     * `anaconda.pth` is not a standard part of Python or Anaconda; it's created by our custom `conda-create-stacked` utility.
 
 ## Releasing a new version
-1. Ensure that you are on the `master` branch and all the changes you want to include have been merged in.
-1. Test that all the core functionality works properly using the test script (`wmfdata_tests/tests.py`). 
-1. Decide the new version number. This package follows [Semantic Versioning](https://semver.org/): "given a version number MAJOR.MINOR.PATCH, increment the: MAJOR version when you make incompatible API changes, MINOR version when you add functionality in a backwards compatible manner, and PATCH version when you make backwards compatible bug fixes."
-1. Update the version number in `wmfdata/metadata.py`.
-1. Update `CHANGELOG.md` with all of the noteworthy changes in the release.
-1. Commit your changes using the commit message "Make version X.Y.Z".
-1. Tag the commit you just made with the version (`git tag vX.Y.Z`).
-1. Push your new commit and tag to the remote (`git push --tags`).
-1. Checkout the `release` branch and rebase it onto `master`. 
-1. Now push this branch to the remote. This is the step that will trigger update notification to users.
-1. If the release is significant, announce it to `analytics-announce@lists.wikimedia.org`.
+1. Make sure you have origin-tracking versions of the `master` and `release` branches on your computer.
+    * To check, run `git remote show origin`. The list under `Local refs configured for 'git push':` should include both `master` and `release`.
+    * If you're missing one, use `git checkout --track origin/{{branch}}`. Delete your local version first if necessary (`git branch -d {{branch}}`)
+3. Check out the `master` branch and make sure all the changes you want to release have been merged in.
+4. Run the test script (`wmfdata_tests/tests.py`) to verify that all the core functionality works properly.
+5. Decide the new version number. This package follows [Semantic Versioning](https://semver.org/): 
+    > Given a version number MAJOR.MINOR.PATCH, increment the: MAJOR version when you make incompatible API changes, MINOR version when you add functionality in a backwards compatible manner, and PATCH version when you make backwards compatible bug fixes.
+6. Update the version number in `wmfdata/metadata.py`.
+7. Update `CHANGELOG.md` with all of the noteworthy changes in the release.
+8. Commit your changes using the commit message "Make version X.Y.Z". Push this commit to the origin.
+9. Tag the commit you just made with the version (`git tag vX.Y.Z`). Push this tag to the origin (`git push origin vX.Y.Z`).
+11. Check out the `release` branch and rebase it onto `master`. 
+12. Now push this branch to the origin. This is the step that will trigger update notification to users.
+14. If the release is significant, announce it to `analytics-announce@lists.wikimedia.org`.
