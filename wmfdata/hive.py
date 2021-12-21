@@ -73,31 +73,35 @@ def run(commands, format="pandas", heap_size=1024, engine="deprecated"):
             category=FutureWarning
         )
 
-    # Support multiple commands by concatenating them with ";". If the user
-    # has passed more than one query, this will result in a error when Pandas
-    # tries to read the resulting concatenated output (unless the queries
-    # happen to produce the same number of columns).
-    #
-    # Ideally, we would return only the last query's results or throw a clearer
-    # error ourselves. However, there's no simple way to determine if multiple
-    # queries have been passed or separate their output, so it's not worth
-    # the effort.
-    commands = ";\n".join(ensure_list(commands))
-
     connect_kwargs = {
         "host": HIVE_URL,
         "auth": "KERBEROS",
         "username": pwd.getpwuid(os.getuid()).pw_name,
         "kerberos_service_name": KERBEROS_SERVICE_NAME,
     }
-    with hive.connect(**connect_kwargs) as conn:
-        if format == "pandas":
-            return pd.read_sql(commands, conn)
-        if format == "raw":
-            cursor = conn.cursor()
-            cursor.execute(commands)
-            return cursor.fetchall()
 
+    commands = ensure_list(commands)
+    response = None
+
+    with hive.connect(**connect_kwargs) as conn:
+        for command in commands:
+            if format == "pandas":
+                try:
+                    # this will work when the command is a SQL query
+                    # so the last query in `commands` will return its results
+                    response = pd.read_sql(command, conn)
+                except TypeError:
+                    # The weird thing here is the command actually runs,
+                    # Pandas just has trouble when trying to read the result
+                    # So when we pass here, we don't need to re-run the command
+                    pass
+
+            elif format == "raw":
+                cursor = conn.cursor()
+                cursor.execute(command)
+                response = cursor.fetchall()
+
+    return response
 
 
 def load_csv(
