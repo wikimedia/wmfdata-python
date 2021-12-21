@@ -7,6 +7,7 @@ import warnings
 from pyhive import hive
 from shutil import copyfileobj
 from wmfdata.utils import (
+    check_kerberos_auth,
     ensure_list
 )
 
@@ -15,7 +16,7 @@ KERBEROS_SERVICE_NAME = "hive"
 
 
 def run_cli(
-    commands, format="pandas", heap_size=1024, use_nice=True,
+    commands, format="pandas", heap_size=None, use_nice=True,
     use_ionice=True
 ):
     """
@@ -30,19 +31,19 @@ def run_cli(
     * `format`: what format to return the results in
         * "pandas": a Pandas data frame
         * "raw": a TSV string, as returned by the command line interface.
-    * `heap_size`: the amount of memory available to the Hive client. Increase
-      this if a command experiences an out of memory error.
+    * `heap_size`: [Deprecated]
     * `use_nice`: [Deprecated]
     * `use_ionice`: [Deprecated]
     """
     warnings.warn(
-        "'run_cli' is deprecated. It will be removed in the next major release.",
+        "'run_cli' is deprecated. It will be removed in the next major release."
+        "Please use 'run' instead.",
         category=FutureWarning
     )
-    return run(commands, format, heap_size)
+    return run(commands, format)
 
 
-def run(commands, format="pandas", heap_size=1024, engine="deprecated"):
+def run(commands, format="pandas", heap_size="deprecated", engine="deprecated"):
     """
     Runs SQL commands against the Hive tables in the Data Lake.
 
@@ -54,16 +55,16 @@ def run(commands, format="pandas", heap_size=1024, engine="deprecated"):
     * `format`: what format to return the results in
         * "pandas": a Pandas data frame
         * "raw": a TSV string, as returned by the command line interface.
-    * `heap_size`: the amount of memory available to the Hive client. Increase
-      this if a command experiences an out of memory error.
+    * `heap_size`: [Deprecated]
+    * `engine`: [Deprecated]
     """
 
     if format not in ["pandas", "raw"]:
         raise ValueError("The `format` should be either `pandas` or `raw`.")
 
-    if heap_size != 1024:
+    if heap_size != "deprecated":
         warnings.warn(
-            "'heap_size' is not being applied. TODO: can pyhive set this somehow?",
+            "'heap_size' is deprecated. It will be removed in the next major release",
             category=FutureWarning
         )
 
@@ -72,6 +73,8 @@ def run(commands, format="pandas", heap_size=1024, engine="deprecated"):
             "'engine' is deprecated. It will be removed in the next major release.",
             category=FutureWarning
         )
+
+    check_kerberos_auth()
 
     connect_kwargs = {
         "host": HIVE_URL,
