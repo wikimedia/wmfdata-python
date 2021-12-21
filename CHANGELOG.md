@@ -1,3 +1,9 @@
+# 1.3 (21 December 2021)
+* A new integration test script (`wmfdata_tests/tests.py`) makes it easy to verify that this package and the analytics infrastructure function together to allow users to access data.
+* Spark session timeouts now run on a [daemon thread](https://docs.python.org/3.7/library/threading.html#threading.Thread.daemon) so that scripts using the `spark` module can exit correctly.
+* `spark.run` no longer produces an error when an SQL command without output is run.
+* The documentation now provides detailed instructions for setting up the package in [development mode](https://setuptools.pypa.io/en/latest/userguide/development_mode.html) given the [new Conda setup](https://wikitech.wikimedia.org/wiki/Analytics/Systems/Anaconda) on the analytics clients.
+
 # 1.2 (11 March 2021)
 * With the help of a new `conda` module, the `spark` module has been revised to take advantage of the capabilities of the new conda-based Jupyter setup currently in development. Most significantly, the module now supports shipping a local conda environment to the Spark workers if custom dependencies are needed.
 * The on-import update check now times out after 1 second to prevent long waits when the web request fails to complete (as when the `https_proxy` environment variable is not set).
