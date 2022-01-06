@@ -11,7 +11,7 @@ Other features include:
 ## Installation and upgrading
 To install the latest version of wmfdata, use the following command:
 ```
-pip install --upgrade git+https://github.com/wikimedia/wmfdata-python.git@release
+pip install --upgrade git+https://github.com/wikimedia/wmfdata-python.git@release --ignore-installed
 ```
 
 This works whether or not you have an older version installed.
