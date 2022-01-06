@@ -1,3 +1,6 @@
+# 1.3.1 (6 January 2022)
+* The recommended install and update command now includes the `--ignore-installed` flag to avoid an error caused by Pip attempting the uninstall the version the package in the read-only `anaconda-wmf` base environment.
+
 # 1.3 (21 December 2021)
 * A new integration test script (`wmfdata_tests/tests.py`) makes it easy to verify that this package and the analytics infrastructure function together to allow users to access data.
 * Spark session timeouts now run on a [daemon thread](https://docs.python.org/3.7/library/threading.html#threading.Thread.daemon) so that scripts using the `spark` module can exit correctly.
