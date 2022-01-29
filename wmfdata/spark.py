@@ -261,7 +261,7 @@ def start_session_timeout(session, timeout_seconds=3600):
 
     # When the timeout executes, leave the stopped thread in `session_timeouts`
     # as a sign that the session was stopped.
-    timeout = Timer(timeout_seconds, stop_session)
+    timeout = Timer(timeout_seconds, stop_session, args=[session])
     # Make sure this timeout won't block exit
     timeout.daemon = True
     session_timeouts[application_id] = timeout
