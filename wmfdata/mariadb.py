@@ -12,6 +12,20 @@ import pandas as pd
 
 from wmfdata.utils import ensure_list
 
+# https://stackoverflow.com/a/68784172
+class BytesConverter(mysql.conversion.MySQLConverter):
+    """
+    This class converts any binary columns (returned as bytearrays)
+    to strings, passing any other columns back to the MySQL library
+    for possible conversion.
+    """
+
+    def to_python(self, vtype, value):
+        if isinstance(value, (bytearray, bytes)):
+            return value.decode('utf-8')
+        else:
+            super().to_python(vtype, value)
+
 connection=None
 # Close any open connections at exit
 @atexit.register
@@ -62,7 +76,12 @@ def connect(db, use_x1=False):
         port=port,
         db=db,
         option_files=option_file,
-        charset='utf8',
+        # Setting the charset to UTF-8 means our binary field _names_ are
+        # returned as strings rather than bytearrays
+        charset="utf8",
+        # This converter class handles our binary field _values_ so they
+        # are returned as strings rathern than bytearrays
+        converter_class=BytesConverter,
         autocommit=True
     )
 
