@@ -55,13 +55,19 @@ def run(commands, format="pandas", heap_size="deprecated", engine="deprecated"):
       supported, and will usually result in an error.
     * `format`: what format to return the results in
         * "pandas": a Pandas data frame
-        * "raw": a TSV string, as returned by the command line interface.
+        * "raw": a TSV string, as returned by the command line interface. [Deprecated]
     * `heap_size`: [Deprecated]
     * `engine`: [Deprecated]
     """
 
     if format not in ["pandas", "raw"]:
         raise ValueError("The `format` should be either `pandas` or `raw`.")
+
+    if format == "raw":
+        warnings.warn(
+            "The 'raw' format is deprecated. It will be removed in the next major release.",
+            category=FutureWarning
+        )
 
     if heap_size != "deprecated":
         warnings.warn(
