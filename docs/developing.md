@@ -20,8 +20,9 @@ When you work on changes to this package, you will want an easily-accessible loc
     > Given a version number MAJOR.MINOR.PATCH, increment the: MAJOR version when you make incompatible API changes, MINOR version when you add functionality in a backwards compatible manner, and PATCH version when you make backwards compatible bug fixes.
 6. Update the version number in `wmfdata/metadata.py`.
 7. Update `CHANGELOG.md` with all of the noteworthy changes in the release.
-8. Commit your changes using the commit message "Make version X.Y.Z". Push this commit to the origin.
-9. Tag the commit you just made with the version (`git tag vX.Y.Z`). Push this tag to the origin (`git push origin vX.Y.Z`).
+8. Commit your changes using the commit message "Make version X.Y.Z".
+9. Tag the commit you just made with the version (`git tag -a vX.Y.Z -m "version X.Y.Z"`).
+10. Push the new commit and tag to the origin (`git push --follow-tags`). 
 11. Check out the `release` branch and rebase it onto `master`. 
 12. Now push this branch to the origin. This is the step that will trigger update notification to users.
 14. If the release is significant, announce it to `analytics-announce@lists.wikimedia.org`.
