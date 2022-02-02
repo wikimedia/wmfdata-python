@@ -15,16 +15,16 @@ from wmfdata.utils import ensure_list
 # https://stackoverflow.com/a/68784172
 class BytesConverter(mysql.conversion.MySQLConverter):
     """
-    This class converts any binary columns (returned as bytearrays)
-    to strings, passing any other columns back to the MySQL library
-    for possible conversion.
+    MediaWiki stores text fields in raw binary format. This class converts
+    such fields from bytearrays to strings, passing other fields back to
+    the MySQL library for possible conversion.
     """
-
     def to_python(self, vtype, value):
-        if isinstance(value, (bytearray, bytes)):
+        mysql_string_types = mysql.constants.FieldType.get_string_types()
+        if vtype[1] in mysql_string_types:
             return value.decode('utf-8')
         else:
-            super().to_python(vtype, value)
+            return super().to_python(vtype, value)
 
 connection=None
 # Close any open connections at exit
