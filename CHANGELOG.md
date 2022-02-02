@@ -1,3 +1,7 @@
+# 1.3.2 (2 February 2022)
+* `mariadb.run` now returns binary text data as Python strings rather than bytearrays when using version 8.0.24 or higher of `mysql-connector-python`.
+* Spark session timeouts now run properly, rather than failing because `spark.stop_session` is called without a required argument. This fixes a bug introduced in version 1.1.
+
 # 1.3.1 (6 January 2022)
 * The recommended install and update command now includes the `--ignore-installed` flag to avoid an error caused by Pip attempting the uninstall the version the package in the read-only `anaconda-wmf` base environment.
 
