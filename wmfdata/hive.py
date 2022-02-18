@@ -163,7 +163,7 @@ def load_csv(
             path = tmp_path
 
         # Copy the file to HDFS because pyhive runs via JDBC not off the local client
-        hdfs_path = f"/tmp/{path}"
+        hdfs_path = f"{path}"
         subprocess.run(["hdfs", "dfs", "-mkdir", "-p", hdfs_path])
         subprocess.run(["hdfs", "dfs", "-put", path, hdfs_path])
 
