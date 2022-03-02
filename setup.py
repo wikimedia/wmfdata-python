@@ -27,7 +27,8 @@ setup(
         "pyarrow",
         "requests",
         "requests_kerberos",
-        "presto-python-client"
+        "presto-python-client",
+        "pyhive[hive]",
     ],
     packages=find_packages(),
     python_requires=">=3",
