@@ -4,7 +4,7 @@
 wmfdata's most popular feature is SQL data access. The `hive.run`, `spark.run`, `presto.run`, and `mariadb.run` functions allow you to run commands using these different query engines and receive the results as a Pandas dataframe in one line of code.
 
 Other features include:
-* Easy generation of Spark sessions using `spark.get_session` (or `spark.get_custom_session` if you want to fine-tine the settings)
+* Easy generation of Spark sessions using `spark.get_session` (or `spark.get_custom_session` if you want to fine-tune the settings)
 * Loading CSV or TSV files into Hive using `hive.load_csv`
 * Turning cryptic Kerberos-related errors into clear reminders to renew your Kerberos credentials
 
