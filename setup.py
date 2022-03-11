@@ -21,7 +21,7 @@ setup(
         "IPython",
         "findspark",
         "matplotlib>=2.1", # 2.1 introduced ticker.PercentFormatter
-        "mysql-connector-python",
+        "mysql-connector-python>=8.0.24", # 8.0.24 made major changes to value conversion
         "pandas>=0.20.1", # 0.20.1 introduced the errors module
         "packaging",
         "pyarrow",

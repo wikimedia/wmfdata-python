@@ -20,9 +20,19 @@ class BytesConverter(mysql.conversion.MySQLConverter):
     the MySQL library for possible conversion.
     """
     def to_python(self, vtype, value):
-        mysql_string_types = mysql.constants.FieldType.get_string_types()
-        if vtype[1] in mysql_string_types:
-            return value.decode('utf-8')
+        types_to_decode = (
+            # (VAR)CHAR, (VAR)BINARY, etc.
+            mysql.constants.FieldType.get_string_types()
+            # BLOB types
+            + mysql.constants.FieldType.get_binary_types()
+        )
+        if vtype[1] in types_to_decode:
+            try:
+                return value.decode('utf-8')
+            # This should only occur with NULLs and non-binary strings,
+            # which don't need conversion
+            except AttributeError:
+                return value
         else:
             return super().to_python(vtype, value)
 
