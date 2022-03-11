@@ -4,4 +4,4 @@
 # installed.
 
 source = "https://github.com/wikimedia/wmfdata-python"
-version = "1.3.2"
+version = "1.3.3"

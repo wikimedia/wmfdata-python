@@ -1,3 +1,7 @@
+# 1.3.3 (11 March 2022)
+* Improve handling of nulls and blobs in binary fields (#29)
+* Switch to pyhive as a hive interface (#24)
+
 # 1.3.2 (2 February 2022)
 * `mariadb.run` now returns binary text data as Python strings rather than bytearrays when using version 8.0.24 or higher of `mysql-connector-python`.
 * Spark session timeouts now run properly, rather than failing because `spark.stop_session` is called without a required argument. This fixes a bug introduced in version 1.1.
