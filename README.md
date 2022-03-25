@@ -16,15 +16,6 @@ pip install --upgrade git+https://github.com/wikimedia/wmfdata-python.git@releas
 
 This works whether or not you have an older version installed.
 
-## Troubleshooting
-### Importing wmfdata fails with `AttributeError: module 'matplotlib.ticker' has no attribute 'PercentFormatter'`
-
-This happens because wmfdata requires matplotlib 2.1 or greater, but the preinstalled version on SWAP is older. wmfdata automatically upgrades matplotlib during its installation, but for some reason the new version doesn't take effect immediately. Restarting your Jupyter server should fix it (don't worry, this won't affect anyone else). This is different that restarting an individual notebook's kernel; to restart your server, follow these steps:
-1. Navigate to `/hub/home` on your Jupyter server (for example, if your server is available at `localhost:8000`, go to `http://localhost:8000/hub/home`).
-1. Click the big red button that says "Stop My Server".
-1. Wait a while, reloading the page if necessary, until the red button has disappeared and you see a big green button that says "Start My Server".
-1. Log back in, and everything should work correctly. 
-
 ## Support and maintenance 
 Tasks related to wmfdata are tracked in Wikimedia Phabricator in the [wmfdata-python project](https://phabricator.wikimedia.org/project/profile/4627/). 
 
