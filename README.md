@@ -1,4 +1,4 @@
-`wmfdata` is an Python package for analyzing Wikimedia data on Wikimedia's [non-public](https://wikitech.wikimedia.org/wiki/Analytics/Data_access#Production_access) [analytics clients](https://wikitech.wikimedia.org/wiki/Analytics/Systems/Clients). It is maintained by the [Wikimedia Foundation Product Analytics team](https://www.mediawiki.org/wiki/Product_Analytics).
+`wmfdata` is an Python package for analyzing Wikimedia data on Wikimedia's [non-public](https://wikitech.wikimedia.org/wiki/Analytics/Data_access#Production_access) [analytics clients](https://wikitech.wikimedia.org/wiki/Analytics/Systems/Clients).
 
 ## Features
 wmfdata's most popular feature is SQL data access. The `hive.run`, `spark.run`, `presto.run`, and `mariadb.run` functions allow you to run commands using these different query engines and receive the results as a Pandas dataframe in one line of code.
@@ -25,9 +25,9 @@ This happens because wmfdata requires matplotlib 2.1 or greater, but the preinst
 1. Wait a while, reloading the page if necessary, until the red button has disappeared and you see a big green button that says "Start My Server".
 1. Log back in, and everything should work correctly. 
 
-## Support and bug reports
+## Support and maintenance 
 Tasks related to wmfdata are tracked in Wikimedia Phabricator in the [wmfdata-python project](https://phabricator.wikimedia.org/project/profile/4627/). 
 
-You can also email the Product Analytics team at product-analytics AT wikimedia.org with questions or feedback.
+The Wikimedia Foundation's [Product Analytics](https://www.mediawiki.org/wiki/Product_Analytics) and [Data Engineering](https://wikitech.wikimedia.org/wiki/Data_Engineering) teams are joint [code stewards](https://www.mediawiki.org/wiki/Code_Stewardship) of wmfdata. Data Engineering is the ultimate steward of the data access and analytics infrastructure interface portions, while Product Analytics is ultimate steward of the analyst ergonomics and data visualization portions. The current [maintainers](https://www.mediawiki.org/wiki/Developers/Maintainers) of wmfdata are [nshahquinn](), [ottomata](https://github.com/ottomata), [milimetric](https://github.com/milimetric/), and [nettrom](https://github.com/nettrom/).
 
 If you're a hero who would like to contribute code, we welcome [pull requests here on GitHub](/pulls).
