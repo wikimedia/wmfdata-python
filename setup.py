@@ -21,7 +21,9 @@ setup(
         "IPython",
         "findspark",
         "matplotlib>=2.1", # 2.1 introduced ticker.PercentFormatter
-        "mysql-connector-python>=8.0.24", # 8.0.24 made major changes to value conversion
+        # This is the latest version which supports MariaDB Connector/C 3.1.16,
+        # which is the version currently available on the analytics clients
+        "mariadb==1.0.11",
         "pandas>=0.20.1", # 0.20.1 introduced the errors module
         "packaging",
         "pyarrow",
