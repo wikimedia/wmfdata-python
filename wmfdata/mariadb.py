@@ -125,7 +125,9 @@ def run_to_tuples(connection, commands):
 
     for command in commands:
         cursor.execute(command)
-        if cursor.with_rows:
+        # fieldcount will be 0 for DDL (e.g. CREATE TABLE) or
+        # DML (e.g. INSERT) statements.
+        if cursor.fieldcount() > 0:
             records = cursor.fetchall()
             column_names = [x[0] for x in cursor.description]
             result = ResultSet(column_names, records)
