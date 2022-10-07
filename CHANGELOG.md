@@ -1,3 +1,6 @@
+# Next version
+* `utils` now includes an `sql_tuple` function which makes it easy to format a Python list or tuple for use in an SQL IN clause.
+
 # 1.3.3 (11 March 2022)
 * Improve handling of nulls and blobs in binary fields (#29)
 * Switch to pyhive as a hive interface (#24)
