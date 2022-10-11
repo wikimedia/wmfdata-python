@@ -1,3 +1,6 @@
+# Next version
+* `mariadb.run` now uses the MariaDB Python connector library rather than the MySQL one, which fixes several errors ([T319360](https://phabricator.wikimedia.org/T319360)).
+
 # 1.3.3 (11 March 2022)
 * Improve handling of nulls and blobs in binary fields (#29)
 * Switch to pyhive as a hive interface (#24)
