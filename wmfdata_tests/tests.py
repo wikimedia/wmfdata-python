@@ -113,7 +113,7 @@ READ_TABLE_2 = f"""
 SILENT_COMMAND = "DROP TABLE IF EXISTS wmfdata_test_abcdefghjkl"
 
 def test_read_via_hive():
-    test_data_1_via_hive = wmf.hive.run_cli(READ_TABLE_1)
+    test_data_1_via_hive = wmf.hive.run(READ_TABLE_1)
     assert_dataframes_match(TEST_DATA_1, test_data_1_via_hive)
     log_test_passed("Read via Hive")
 
@@ -166,7 +166,7 @@ def test_load_csv():
         table_name="wmfdata_test_2"
     )
 
-    test_data_2 = wmf.hive.run_cli(READ_TABLE_2)
+    test_data_2 = wmf.hive.run(READ_TABLE_2)
     assert_dataframes_match(TEST_DATA_2, test_data_2)
 
     log_test_passed("Load CSV to Data Lake")
