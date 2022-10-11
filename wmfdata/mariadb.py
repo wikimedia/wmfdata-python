@@ -6,35 +6,34 @@ from itertools import chain
 import subprocess
 import warnings
 
-# https://pypi.org/project/mysql-connector-python/
-import mysql.connector as mysql
+import mariadb
+from mariadb.constants import FIELD_TYPE
 import pandas as pd
 
 from wmfdata.utils import ensure_list
 
-# https://stackoverflow.com/a/68784172
-class BytesConverter(mysql.conversion.MySQLConverter):
-    """
-    MediaWiki stores text fields in raw binary format. This class converts
-    such fields from bytearrays to strings, passing other fields back to
-    the MySQL library for possible conversion.
-    """
-    def to_python(self, vtype, value):
-        types_to_decode = (
-            # (VAR)CHAR, (VAR)BINARY, etc.
-            mysql.constants.FieldType.get_string_types()
-            # BLOB types
-            + mysql.constants.FieldType.get_binary_types()
-        )
-        if vtype[1] in types_to_decode:
-            try:
-                return value.decode('utf-8')
-            # This should only occur with NULLs and non-binary strings,
-            # which don't need conversion
-            except AttributeError:
-                return value
-        else:
-            return super().to_python(vtype, value)
+
+# Set up converter for binary data
+def decode_binary(x):
+    try:
+        return x.decode('utf-8')
+    # This should only occur with NULLs and non-binary strings,
+    # which don't need conversion
+    except AttributeError:
+        return x
+
+types_to_decode = [
+    FIELD_TYPE.VARCHAR,
+    FIELD_TYPE.VAR_STRING,
+    FIELD_TYPE.STRING,
+    FIELD_TYPE.TINY_BLOB,
+    FIELD_TYPE.MEDIUM_BLOB,
+    FIELD_TYPE.LONG_BLOB,
+    FIELD_TYPE.BLOB
+]
+
+converter = {t: decode_binary for t in types_to_decode}
+
 
 connection=None
 # Close any open connections at exit
@@ -65,7 +64,7 @@ def connect(db, use_x1=False):
     if host == ['']:
         raise ValueError("The database '{}' was not found.".format(db))
 
-    port = host[1]
+    port = int(host[1])
     host = host[0]
 
     # Check which group the user is in, and use the appropriate credentials file
@@ -81,18 +80,13 @@ def connect(db, use_x1=False):
             "MariaDB cluster."
         )
 
-    connection = mysql.connect(
+    connection = mariadb.connect(
         host=host,
         port=port,
         db=db,
-        option_files=option_file,
-        # Setting the charset to UTF-8 means our binary field _names_ are
-        # returned as strings rather than bytearrays
-        charset="utf8",
-        # This converter class handles our binary field _values_ so they
-        # are returned as strings rathern than bytearrays
-        converter_class=BytesConverter,
-        autocommit=True
+        default_file=option_file,
+        autocommit=True,
+        converter=converter
     )
 
     return connection
@@ -131,7 +125,9 @@ def run_to_tuples(connection, commands):
 
     for command in commands:
         cursor.execute(command)
-        if cursor.with_rows:
+        # fieldcount will be 0 for DDL (e.g. CREATE TABLE) or
+        # DML (e.g. INSERT) statements.
+        if cursor.fieldcount() > 0:
             records = cursor.fetchall()
             column_names = [x[0] for x in cursor.description]
             result = ResultSet(column_names, records)
