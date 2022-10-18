@@ -181,7 +181,7 @@ def test_sql_tuple():
         raise AssertionError("Passing an empty iterable to sql_tuple should raise a ValueError.")
 
     t = wmf.utils.sql_tuple(("enwiki", "arwiki", "dewiki"))
-    assert t = "('enwiki', 'arwiki', 'dewiki')"
+    assert t == "('enwiki', 'arwiki', 'dewiki')"
 
     log_test_passed("utils.sql_tuple unit test")
 
