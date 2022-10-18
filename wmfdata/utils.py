@@ -175,19 +175,30 @@ def sql_tuple(i):
     > sql_tuple(["a", "b", "c"])
     "('a', 'b', 'c')"
     """
-    # It might seem useful to return "()" when an empty iterable is passed, but "IN ()"
-    # results in an SQL syntax error. Instead, we should send a clear signal to the caller
-    # that it needs to better handle the no-items case.
-    if len(i) == 0:
-        raise ValueError("Cannot produce an SQL tuple without any items.")
 
     # Transform other iterables into lists, raising errors for non-iterables
     if type(i) != list:
         i = [x for x in i]
 
+    # It might seem useful to return "()" when an empty iterable is passed, but "IN ()"
+    # results in an SQL syntax error. Instead, we should send a clear signal to the caller
+    # that it needs to better handle the no-items case.
+    #
+    # Running this check after converting i to a list avoids errors from generators that
+    # don't implement len.
+    if len(i) == 0:
+        raise ValueError("Cannot produce an SQL tuple without any items.")
+
     # Using Python's string representation functionality means we get escaping for free. Using the
     # representation of a tuple almost works, but fails when there's just one element, because SQL
     # doesn't accept the trailing comma that Python uses. Instead, we use representation of a
     # list and replace the brackets with parentheses.
+    #
+    # To-do: The string representation method fails in an edge case. It normally produces single
+    # quotes but falls back to double quotes if the string contains a single quote. If the database
+    # strictly follows the ANSI SQL standard (as Presto does), double-quoted strings are
+    # interpreted as literal column names rather than strings. This is low priority, but ideally
+    # we would fix this by constructing the SQL tuple manually rather than using the string
+    # representation.
     list_repr = repr(i)
     return "(" + list_repr[1:-1] + ")"
