@@ -1,5 +1,4 @@
-# Next version
-=======
+# 1.4.0 (20 October 2022)
 * `mariadb.run` now uses the MariaDB Python connector library rather than the MySQL one, which fixes several errors ([T319360](https://phabricator.wikimedia.org/T319360)).
 * `utils` now includes an `sql_tuple` function which makes it easy to format a Python list or tuple for use in an SQL IN clause.
 
