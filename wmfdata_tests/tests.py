@@ -171,6 +171,20 @@ def test_load_csv():
 
     log_test_passed("Load CSV to Data Lake")
 
+def test_sql_tuple():
+    try:
+        wmf.utils.sql_tuple([])
+    # We want a ValueError in this case
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("Passing an empty iterable to sql_tuple should raise a ValueError.")
+
+    t = wmf.utils.sql_tuple(("enwiki", "arwiki", "dewiki"))
+    assert t == "('enwiki', 'arwiki', 'dewiki')"
+
+    log_test_passed("utils.sql_tuple unit test")
+
 
 def main():
     clean_tables()
@@ -185,6 +199,8 @@ def main():
     test_read_via_mariadb()
     test_silent_command_via_MariaDB()
     test_load_csv()
+
+    test_sql_tuple()
 
     clean_tables()
 
