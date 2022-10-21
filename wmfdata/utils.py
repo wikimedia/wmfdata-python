@@ -174,6 +174,10 @@ def sql_tuple(i):
     For example:
     > sql_tuple(["a", "b", "c"])
     "('a', 'b', 'c')"
+
+    WARNING: In some cases, this function produces incorrect results with strings that contain
+    single quotes or backslashes. If you encounter this situation, consult the code comments or ask
+    the maintainers for help.
     """
 
     # Transform other iterables into lists, raising errors for non-iterables
@@ -194,11 +198,18 @@ def sql_tuple(i):
     # doesn't accept the trailing comma that Python uses. Instead, we use representation of a
     # list and replace the brackets with parentheses.
     #
-    # To-do: The string representation method fails in an edge case. It normally produces single
-    # quotes but falls back to double quotes if the string contains a single quote. If the database
-    # strictly follows the ANSI SQL standard (as Presto does), double-quoted strings are
-    # interpreted as literal column names rather than strings. This is low priority, but ideally
-    # we would fix this by constructing the SQL tuple manually rather than using the string
-    # representation.
+    # To-do: The string representation method sometimes fails when an element contains
+    # a single quote or a backslash because the escaping it produces may not match the escaping
+    # expected by the query engine. For example, with a single quote, this method will escape it
+    # by wrapping the element with double quotes rather than single quotes. This works for Spark
+    # and MariaDB, but Presto strictly follows the ANSI SQL standard, so it interprets
+    # double-quoted strings as literal column names rather than strings.
+    #
+    # Even worse, there is no single escaping scheme that works for all of MariaDB, Spark, and
+    # Presto. To produce correct behavior in all cases, it will probably be necessary to allow the
+    # user to specify the query engine and produce different results accordingly. For more
+    # information, see:
+    # https://github.com/nshahquinn/misc-wikimedia-analysis/blob/master
+    # /2022-10_SQL_string_escaping.ipynb
     list_repr = repr(i)
     return "(" + list_repr[1:-1] + ")"
