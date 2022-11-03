@@ -1,3 +1,11 @@
+# Next version
+* Spark2 has been deprecated, and Spark sessions will now pick up Spark3 by default. Please see [T318367](https://phabricator.wikimedia.org/T318367) for documentation on how to migrate your jobs. If you still want to use Spark2, you can override the `SPARK_HOME` environment variable. In Python, overriding will look like so:
+```python
+# make sure to override at the top of your script!
+import os
+os.environ["SPARK_HOME"] = '/usr/lib/spark2'
+```
+
 # 1.4.0 (20 October 2022)
 * `mariadb.run` now uses the MariaDB Python connector library rather than the MySQL one, which fixes several errors ([T319360](https://phabricator.wikimedia.org/T319360)).
 * `utils` now includes an `sql_tuple` function which makes it easy to format a Python list or tuple for use in an SQL IN clause.
