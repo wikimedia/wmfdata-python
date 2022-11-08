@@ -90,9 +90,9 @@ def get_custom_session(
     * `master`: passed to SparkSession.builder.master()
       If this is "yarn" and and a conda env is active and and ship_python_env=False,
       remote executors will be configured to use conda.conda_base_env_prefix(),
-      which defaults to anaconda-wmf. This should usually work as anaconda-wmf
+      which defaults to conda-analytics. This should usually work as conda-analytics
       is installed on all WMF YARN worker nodes.  If your conda environment
-      has required packages installed that are not in anaconda-wmf, set
+      has required packages installed that are not in conda-analytics, set
       ship_python_env=True.
     * `app_name`: passed to SparkSession.builder.appName().
     * `spark_config`: passed to SparkSession.builder.config()
@@ -125,7 +125,7 @@ def get_custom_session(
 
             # Workers should use python from the unpacked conda env.
             os.environ["PYSPARK_PYTHON"] = f"{conda_packed_name}/bin/python3"
-        # Else if conda is active, use the use the conda_base_env_prefix (anaconda-wmf)
+        # Else if conda is active, use the conda_base_env_prefix (conda-analytics)
         # environment, as this should exist on all worker nodes.
         elif conda.is_active():
             os.environ["PYSPARK_PYTHON"] = os.path.join(

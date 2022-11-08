@@ -1,19 +1,32 @@
 import json
 import os
-
-# In case conda is not installed, we still want these functions to return something useful.
-try:
-    from conda.cli.python_api import run_command as condacli
-    conda_installed = True
-except ImportError:
-    conda_installed = False
-
+import sys
 from wmfdata.utils import print_err
+
+
+# In case conda is not installed, we still want the functions below to return something useful.
+def __find_conda():
+    try:
+        from conda.cli.python_api import run_command as condacli
+        return True
+    except ImportError:
+        return False
+
+
+# first, try just importing. this should work for anaconda-wmf stacked environments
+conda_installed = __find_conda()
+# if not found, we may be on a conda-analytics cloned environment
+# conda clones do not include the conda package so we include a helper
+# symlink to conda python path when installing conda-analytics
+if not conda_installed and os.path.islink("/usr/lib/conda"):
+    sys.path.append("/usr/lib/conda")
+    conda_installed = __find_conda()
+
 
 """
 Default CONDA_BASE_ENV_PREFIX.
 """
-conda_base_env_prefix_default = "/usr/lib/anaconda-wmf"
+conda_base_env_prefix_default = "/opt/conda-analytics"
 
 """
 Default kwargs to pass to conda_pack.pack.
@@ -81,7 +94,7 @@ def is_stacked():
 
 def conda_base_env_prefix():
     """
-    Returns the path to the conda base env, which on WMF servers is /usr/lib/anaconda-wmf.
+    Returns the path to the conda base env, which on WMF servers is /opt/conda-analytics.
     This can be overridden by setting the CONDA_BASE_ENV_PREFIX env var.
     """
     return os.environ.get("CONDA_BASE_ENV_PREFIX", conda_base_env_prefix_default)
