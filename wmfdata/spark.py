@@ -277,7 +277,7 @@ def start_session_timeout(session, timeout_seconds=3600):
     session_timeouts[application_id] = timeout
     timeout.start()
 
-def run(commands, format="pandas", session_type="yarn-regular", extra_settings={}):
+def run(commands, session_type="yarn-regular", extra_settings={}):
     """
     Runs SQL commands against the Hive tables in the Data Lake using the
     PySpark SQL interface.
@@ -292,9 +292,6 @@ def run(commands, format="pandas", session_type="yarn-regular", extra_settings={
       strings for multiple commands within the same session (useful for things
       like setting session variables). Passing more than one query is *not*
       supported; only results from the second will be returned.
-    * `format`: the format in which to return data
-        * "pandas": a Pandas data frame
-        * "raw": a list of tuples, as returned by the Spark SQL interface.
     * `session_type`: the type of Spark session to create.
         * "local": Run the command in a local Spark process. Use this for
           prototyping or querying small-ish data (less than a couple of GB).
@@ -307,14 +304,6 @@ def run(commands, format="pandas", session_type="yarn-regular", extra_settings={
       the Spark session. These will override the defaults specified
       by `session_type`.
     """
-
-    if format not in ["pandas", "raw"]:
-        raise ValueError("The `format` should be either `pandas` or `raw`.")
-    if format == "raw":
-        warnings.warn(
-            "The 'raw' format is deprecated. It will be removed in the next major release.",
-            category=FutureWarning
-        )
 
     commands = ensure_list(commands)
 
@@ -336,10 +325,7 @@ def run(commands, format="pandas", session_type="yarn-regular", extra_settings={
             overall_result = cmd_result
     
     if overall_result:
-        if format == "pandas":
-            overall_result = overall_result.toPandas()
-        elif format == "raw":
-            overall_result = overall_result.collect()
+        overall_result = overall_result.toPandas()
 
     # (re)start a timeout on SparkSessions in Yarn after the result is collected.
     # A SparkSession used by this run function
