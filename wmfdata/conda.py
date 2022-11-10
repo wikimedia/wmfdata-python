@@ -11,11 +11,6 @@ except ImportError:
 from wmfdata.utils import print_err
 
 """
-Default CONDA_BASE_ENV_PREFIX.
-"""
-conda_base_env_prefix_default = "/usr/lib/anaconda-wmf"
-
-"""
 Default kwargs to pass to conda_pack.pack.
 """
 conda_pack_defaults = {
@@ -79,11 +74,26 @@ def is_stacked():
         return True
 
 
+def is_anaconda_wmf_env():
+    """
+    Returns True if we detect that the conda environment is the deprecated anaconda-wmf.
+    False otherwise.
+    """
+    conda_location = info().get('conda_location', '')
+    return conda_location.startswith('/usr/lib/anaconda-wmf')
+
+
 def conda_base_env_prefix():
     """
-    Returns the path to the conda base env, which on WMF servers is /usr/lib/anaconda-wmf.
+    Returns the path to the conda base env, which on WMF servers can be either
+    '/usr/lib/anaconda-wmf' or '/opt/conda-analytics'.
     This can be overridden by setting the CONDA_BASE_ENV_PREFIX env var.
     """
+    if is_anaconda_wmf_env():
+        conda_base_env_prefix_default = '/usr/lib/anaconda-wmf'
+    else:
+        conda_base_env_prefix_default = '/opt/conda-analytics'
+
     return os.environ.get("CONDA_BASE_ENV_PREFIX", conda_base_env_prefix_default)
 
 
