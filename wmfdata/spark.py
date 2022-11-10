@@ -15,11 +15,15 @@ from wmfdata.utils import (
 """
 Will be used for findspark.init().
 """
-SPARK_HOME = os.environ.get("SPARK_HOME", "/usr/lib/spark3")
+if conda.is_anaconda_wmf_env():
+    default_spark = "/usr/lib/spark2"
+else:
+    default_spark = "/usr/lib/spark3"
+SPARK_HOME = os.environ.get("SPARK_HOME", default_spark)
 if SPARK_HOME == "/usr/lib/spark2":
     warnings.warn(
         "Spark2 has been deprecated. Please upgrade your jobs to Spark3. "
-        "See https://phabricator.wikimedia.org/T318367 for details.",
+        "See https://wikitech.wikimedia.org/wiki/Analytics/Systems/Cluster/Spark/Migration_to_Spark_3 for details.",
         category=FutureWarning
     )
 
@@ -90,9 +94,9 @@ def get_custom_session(
     * `master`: passed to SparkSession.builder.master()
       If this is "yarn" and and a conda env is active and and ship_python_env=False,
       remote executors will be configured to use conda.conda_base_env_prefix(),
-      which defaults to anaconda-wmf. This should usually work as anaconda-wmf
-      is installed on all WMF YARN worker nodes.  If your conda environment
-      has required packages installed that are not in anaconda-wmf, set
+      which for Spark2 defaults to anaconda-wmf and for Spark3 defalts to conda-analytics.
+      This should usually work as both are installed on all WMF YARN worker nodes.
+      If your conda environment has required packages installed that are not in those, set
       ship_python_env=True.
     * `app_name`: passed to SparkSession.builder.appName().
     * `spark_config`: passed to SparkSession.builder.config()
@@ -125,7 +129,7 @@ def get_custom_session(
 
             # Workers should use python from the unpacked conda env.
             os.environ["PYSPARK_PYTHON"] = f"{conda_packed_name}/bin/python3"
-        # Else if conda is active, use the use the conda_base_env_prefix (anaconda-wmf)
+        # Else if conda is active, use the conda_base_env_prefix
         # environment, as this should exist on all worker nodes.
         elif conda.is_active():
             os.environ["PYSPARK_PYTHON"] = os.path.join(
