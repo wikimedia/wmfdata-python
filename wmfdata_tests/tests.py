@@ -8,9 +8,6 @@ import pandas as pd
 import wmfdata as wmf
 from wmfdata.utils import print_err
 
-import findspark
-findspark.init("/usr/lib/spark2")
-
 this_directory = str(Path(__file__).parent.resolve())
 
 # To do: This way of specifying the Hive database makes it impossible to 
@@ -51,7 +48,7 @@ def assert_dataframes_match(df1, df2):
     assert df1.columns.equals(df2.columns)
 
 def set_up_table_1(): 
-    spark = wmf.spark.get_session(type="local", app_name="wmfdata-test")
+    spark = wmf.spark.create_session(type="local", app_name="wmfdata-test")
     spark_df = spark.read.load(f"file://{this_directory}/test_data_1.parquet")
     spark_df.write.mode("overwrite").saveAsTable(f"{hive_db}.wmfdata_test_1")
 
