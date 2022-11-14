@@ -13,20 +13,20 @@ from wmfdata.utils import (
     python_version
 )
 
-"""
-Will be used for findspark.init().
-"""
+
 if conda.is_anaconda_wmf_env():
     default_spark = "/usr/lib/spark2"
 else:
     default_spark = "/usr/lib/spark3"
 SPARK_HOME = os.environ.get("SPARK_HOME", default_spark)
-if SPARK_HOME == "/usr/lib/spark2":
-    warnings.warn(
-        "Spark2 has been deprecated. Please upgrade your jobs to Spark3. "
-        "See https://wikitech.wikimedia.org/wiki/Analytics/Systems/Cluster/Spark/Migration_to_Spark_3 for details.",
-        category=FutureWarning
-    )
+
+# This is not necessary in a conda-analytics environment. Once we stop supporting anaconda-wmf
+# environments, we can drop this line and the dependency on findspark.
+findspark.init(SPARK_HOME)
+
+import pyspark
+from pyspark import SparkContext
+from pyspark.sql import SparkSession
 
 """
 Predefined spark sessions and configs for use with the get_session and run functions.
@@ -82,13 +82,9 @@ def get_active_session():
     Spark 3 includes a native getActiveSession function. Once we end Spark 2
     support, we can switch to that.
     """
-    try:
+    if SparkContext._jvm:
         if SparkContext._jvm.SparkSession.active():
             return SparkSession.builder.getOrCreate()
-    # If no session has been created, pyspark has not been imported, so `SparkContext` is not
-    # defined.
-    except NameError:
-        return None
 
 def create_custom_session(
     master="local[2]",
@@ -125,6 +121,14 @@ def create_custom_session(
     """
     check_kerberos_auth()
 
+    if SPARK_HOME == "/usr/lib/spark2":
+        warnings.warn(
+            "\n    Spark 2 has been deprecated. Please migrate to Spark 3."
+            "\n    See https://wikitech.wikimedia.org/wiki/Analytics/Systems/Cluster/Spark/"
+            "Migration_to_Spark_3",
+            category=FutureWarning
+        )
+
     if master == "yarn":
         if ship_python_env:
             # The path to our packed conda environment.
@@ -156,22 +160,8 @@ def create_custom_session(
         elif os.path.isfile(os.path.join(f"/usr/bin/python{python_version()}")):
             os.environ["PYSPARK_PYTHON"] = f"/usr/bin/python{python_version()}"
 
-        if "PYSPARK_PYTHON" in os.environ:
-            print_err(
-                "PySpark executors will use {}.".format(os.environ["PYSPARK_PYTHON"])
-            )
-
     # NOTE: We don't need to touch PYSPARK_PYTHON if master != yarn.
     # The default set by findspark will be fine.
-
-    # Call findspark.init after PYSPARK_PYTHON has possibly been set.
-    # This is needed because findspark will set PYSPARK_PYTHON path
-    # to sys.executable if it isn't yet set, which will likely not
-    # work in YARN mode if sys.executlable is a local conda or virtualenv
-    # (as is the case in WMF Jupyter Notebooks).
-    findspark.init(SPARK_HOME)
-    from pyspark import SparkContext
-    from pyspark.sql import SparkSession
 
     sc = SparkContext._active_spark_context
     if sc:
