@@ -1,10 +1,7 @@
 import atexit
-from collections import namedtuple
 import getpass
 import grp
-from itertools import chain
 import subprocess
-import warnings
 
 import mariadb
 from mariadb.constants import FIELD_TYPE
@@ -91,49 +88,6 @@ def connect(db, use_x1=False):
 
     return connection
 
-def run_to_pandas(connection, commands, date_col=None, index_col=None):
-    result = None
-
-    # Specify the MediaWiki date format for each of the date_cols, if any
-    if date_col:
-        date_col = ensure_list(date_col)
-        date_format = "%Y%m%d%H%M%S"
-        date_col = {col: date_format for col in date_col}
-
-    # To-do: SQL syntax errors cause a chain of multiple Python errors
-    # The simplest way to fix this is probably to get the raw results and
-    # then turn them into a data frame; this would let us avoid using
-    # Pandas's complex SQL machinery.
-    for command in commands:
-        try:
-            result = pd.read_sql_query(
-              command, connection, index_col=index_col, parse_dates=date_col
-            )
-        # pandas will encounter a TypeError with DDL (e.g. CREATE TABLE) or
-        # DML (e.g. INSERT) statements
-        except TypeError:
-            pass
-
-    return result
-
-# A named tuple type for returning raw-format results
-ResultSet = namedtuple("ResultSet", ["column_names", "records"])
-
-def run_to_tuples(connection, commands):
-    result = None
-    cursor = connection.cursor()
-
-    for command in commands:
-        cursor.execute(command)
-        # fieldcount will be 0 for DDL (e.g. CREATE TABLE) or
-        # DML (e.g. INSERT) statements.
-        if cursor.fieldcount() > 0:
-            records = cursor.fetchall()
-            column_names = [x[0] for x in cursor.description]
-            result = ResultSet(column_names, records)
-
-    return result
-
 # To-do: provide an easy way to get lists of wikis
 def run(
   commands, dbs, use_x1=False, format="pandas", date_col=None,
@@ -158,23 +112,11 @@ def run(
     * `use_x1`: whether to the connect to the given database on the
       ExtensionStorage replica (only works for wiki databases or "wikishared").
       Default false.
-    * `format`: which format to return the data in. "pandas" (the default) means
-      a Pandas DataFrame, "raw" means a named tuple consisting of (1) the
-      columns names and (2) the records as a list of tuples, the raw format
-      specified by Python's database API specification v2.0.
-    * `date_col`: if using Pandas format, this parses the specified column or
-      columns from MediaWiki datetimes into Pandas datetimes. If using raw
-      format, has no effect.
-    * `index_col`: if using Pandas format, passed to pandas.read_sql_query to
-      set a columns or columns as the index. If using raw format, has no
-      effect.
+    * `date_col`: this parses the specified column or columns from MediaWiki
+      datetimes into Pandas datetimes.
+    * `index_col`: passed to pandas.read_sql_query to set a columns or columns
+      as the index.
     """
-
-    if format == "raw":
-        warnings.warn(
-            "The 'raw' format is deprecated. It will be removed in the next major release.",
-            category=FutureWarning
-        )
 
     # Make single command and database parameters lists
     commands = ensure_list(commands)
@@ -182,42 +124,44 @@ def run(
 
     results = []
 
-    if format == "pandas":
-        for db in dbs:
-            connection = connect(db, use_x1)
-            result = run_to_pandas(connection, commands, date_col, index_col)
-            connection.close()
-            results.append(result)
+    for db in dbs:
+        connection = connect(db, use_x1)
+        result = None
 
-        if len(dbs) > 1:
-            # Ignore the indexes on the partial results unless a custom index
-            # column was designated
-            if not index_col:
-                ignore_index = True
-            else:
-                ignore_index = False
+        # Specify the MediaWiki date format for each of the date_cols, if any
+        if date_col:
+            date_col = ensure_list(date_col)
+            date_format = "%Y%m%d%H%M%S"
+            date_col = {col: date_format for col in date_col}
 
-            return pd.concat(results, ignore_index=ignore_index)
+        # To-do: SQL syntax errors cause a chain of multiple Python errors
+        # The simplest way to fix this is probably to get the raw results and
+        # then turn them into a data frame; this would let us avoid using
+        # Pandas's complex SQL machinery.
+        for command in commands:
+            try:
+                result = pd.read_sql_query(
+                    command,
+                    connection,
+                    index_col=index_col,
+                    parse_dates=date_col
+                )
+            # pandas will encounter a TypeError with DDL (e.g. CREATE TABLE) or
+            # DML (e.g. INSERT) statements
+            except TypeError:
+                pass
+
+        connection.close()
+        results.append(result)
+
+    if len(dbs) > 1:
+        # Ignore the indexes on the partial results unless a custom index
+        # column was designated
+        if not index_col:
+            ignore_index = True
         else:
-            return results[0]
+            ignore_index = False
 
-    elif format == "raw":
-        for db in dbs:
-            connection = connect(db, use_x1)
-            result = run_to_tuples(connection, commands)
-            connection.close()
-            results.append(result)
-
-        if len(dbs) > 1:
-            # Take the first set of column names since they'll all be the same
-            column_names = results[0].column_names
-
-            record_sets = [result.records for result in results]
-            records = [x for x in chain(record_sets)]
-
-            return ResultSet(column_names, records)
-        else:
-            return results[0]
-
+        return pd.concat(results, ignore_index=ignore_index)
     else:
-        raise ValueError("The format you specified is not supported.")
+        return results[0]

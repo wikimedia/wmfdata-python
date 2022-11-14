@@ -2,7 +2,6 @@ import os
 import pwd
 import tempfile
 import pandas as pd
-import warnings
 import subprocess
 
 from pyhive import hive
@@ -16,35 +15,7 @@ HIVE_URL = "analytics-hive.eqiad.wmnet"
 KERBEROS_SERVICE_NAME = "hive"
 
 
-def run_cli(
-    commands, format="pandas", heap_size=None, use_nice=True,
-    use_ionice=True
-):
-    """
-    [DEPRECATED] Formerly ran SQL commands against the Hive tables in the Data Lake
-    using Hive's command line interface.  Currently just calls `run`.
-
-    Arguments:
-    * `commands`: the SQL to run. A string for a single command or a list of
-      strings for multiple commands within the same session (useful for things
-      like setting session variables). Passing more than one query is *not*
-      supported, and will usually result in an error.
-    * `format`: what format to return the results in
-        * "pandas": a Pandas data frame
-        * "raw": a TSV string, as returned by the command line interface.
-    * `heap_size`: [Deprecated]
-    * `use_nice`: [Deprecated]
-    * `use_ionice`: [Deprecated]
-    """
-    warnings.warn(
-        "'run_cli' is deprecated. It will be removed in the next major release."
-        "Please use 'run' instead.",
-        category=FutureWarning
-    )
-    return run(commands, format)
-
-
-def run(commands, format="pandas", heap_size="deprecated", engine="deprecated"):
+def run(commands):
     """
     Runs SQL commands against the Hive tables in the Data Lake.
 
@@ -53,33 +24,7 @@ def run(commands, format="pandas", heap_size="deprecated", engine="deprecated"):
       strings for multiple commands within the same session (useful for things
       like setting session variables). Passing more than one query is *not*
       supported, and will usually result in an error.
-    * `format`: what format to return the results in
-        * "pandas": a Pandas data frame
-        * "raw": a TSV string, as returned by the command line interface. [Deprecated]
-    * `heap_size`: [Deprecated]
-    * `engine`: [Deprecated]
     """
-
-    if format not in ["pandas", "raw"]:
-        raise ValueError("The `format` should be either `pandas` or `raw`.")
-
-    if format == "raw":
-        warnings.warn(
-            "The 'raw' format is deprecated. It will be removed in the next major release.",
-            category=FutureWarning
-        )
-
-    if heap_size != "deprecated":
-        warnings.warn(
-            "'heap_size' is deprecated. It will be removed in the next major release",
-            category=FutureWarning
-        )
-
-    if engine != "deprecated":
-        warnings.warn(
-            "'engine' is deprecated. It will be removed in the next major release.",
-            category=FutureWarning
-        )
 
     check_kerberos_auth()
 
@@ -95,21 +40,15 @@ def run(commands, format="pandas", heap_size="deprecated", engine="deprecated"):
 
     with hive.connect(**connect_kwargs) as conn:
         for command in commands:
-            if format == "pandas":
-                try:
-                    # this will work when the command is a SQL query
-                    # so the last query in `commands` will return its results
-                    response = pd.read_sql(command, conn)
-                except TypeError:
-                    # The weird thing here is the command actually runs,
-                    # Pandas just has trouble when trying to read the result
-                    # So when we pass here, we don't need to re-run the command
-                    pass
-
-            elif format == "raw":
-                cursor = conn.cursor()
-                cursor.execute(command)
-                response = cursor.fetchall()
+            try:
+                # this will work when the command is a SQL query
+                # so the last query in `commands` will return its results
+                response = pd.read_sql(command, conn)
+            except TypeError:
+                # The weird thing here is the command actually runs,
+                # Pandas just has trouble when trying to read the result
+                # So when we pass here, we don't need to re-run the command
+                pass
 
     return response
 

@@ -1,5 +1,18 @@
 # Next version
+## Spark
 * Spark2 has been deprecated, and Spark sessions will now pick up Spark3 by default. Please see [T318367](https://phabricator.wikimedia.org/T318367) for documentation on how to migrate your jobs. See also instructions on how to override the Spark version on [Wikitech](https://wikitech.wikimedia.org/wiki/Analytics/Systems/Jupyter#Choosing_between_Spark3_and_Spark2).
+* **Breaking change**: the deprecated "raw" format and the non-deprecated `format` parameter have been removed from the `run` function.
+
+## Hive
+* **Breaking change** the deprecated `run_cli` function has been removed.
+* **Breaking change** the deprecated `heap_size` and `engine` parameters of the `run` function have been removed.
+* **Breaking change**: the deprecated "raw" format and the non-deprecated `format` parameter have been removed from the `run` function.
+
+## MariaDB
+* **Breaking change**: the deprecated "raw" format and the non-deprecated `format` parameter have been removed from the `run` function.
+
+## Charting
+* **Breaking change**: The `charting` module has been removed. It was not previously deprecated but was created to hold Neil Shah-Quinn's custom Matplotlib configuration back when this was his personal package, so it is unlikely to be used by others.
 
 # 1.4.0 (20 October 2022)
 * `mariadb.run` now uses the MariaDB Python connector library rather than the MySQL one, which fixes several errors ([T319360](https://phabricator.wikimedia.org/T319360)).

@@ -2,7 +2,6 @@
 # first to prevent circular import issues. Other submodules can depend on utils and/or conda ONLY.
 from wmfdata import utils, conda
 from wmfdata import (
-    charting,
     hive,
     mariadb,
     metadata,
