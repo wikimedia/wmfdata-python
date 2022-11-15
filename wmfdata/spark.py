@@ -129,6 +129,10 @@ def create_custom_session(
             category=FutureWarning
         )
 
+    old_session = get_active_session()
+    if old_session:
+        old_session.stop()
+
     if master == "yarn":
         if ship_python_env:
             # The path to our packed conda environment.
@@ -136,13 +140,16 @@ def create_custom_session(
             # This will be used as the unpacked directory name in the YARN working directory.
             conda_packed_name = os.path.splitext(os.path.basename(conda_packed_file))[0]
 
-            # Ship conda_packed_file to each YARN worker.
+            # Ship conda_packed_file to each YARN worker, unless a previous session has done it already.
             conda_spark_archive = f"{conda_packed_file}#{conda_packed_name}"
-            if "spark.yarn.dist.archives" in spark_config:
+            if not old_session and "spark.yarn.dist.archives" in spark_config:
                 spark_config["spark.yarn.dist.archives"] += f",{conda_spark_archive}"
-            else:
+            elif not old_session:
                 spark_config["spark.yarn.dist.archives"] = conda_spark_archive
-            print_err(f"Will ship {conda_packed_file} to remote Spark executors.")
+                print_err(f"Will ship {conda_packed_file} to remote Spark executors.")
+            else:
+                print_err(f"Skipping sending {conda_packed_file} to remote Spark executors "
+                          f"since an old session already did it.")
 
             # Workers should use python from the unpacked conda env.
             os.environ["PYSPARK_PYTHON"] = f"{conda_packed_name}/bin/python3"
@@ -162,10 +169,6 @@ def create_custom_session(
 
     # NOTE: We don't need to touch PYSPARK_PYTHON if master != yarn.
     # The default set by findspark will be fine.
-
-    sc = SparkContext._active_spark_context
-    if sc:
-        sc.stop()
 
     builder = (
         SparkSession.builder
