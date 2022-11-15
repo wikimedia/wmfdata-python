@@ -119,6 +119,18 @@ def test_silent_command_via_hive():
    assert output is None
    log_test_passed("Silent command via Hive")
 
+def test_spark_session_apis():
+    # once create_session() is called, we should be able to retrieve it via get_active_session()
+    s1 = wmf.spark.create_session(type="local", app_name="wmfdata-test-session-api-1")
+    assert wmf.spark.get_active_session() is s1
+    # a later call to create_session() closes any previous session and returns a new one
+    s2 = wmf.spark.create_session(type="local", app_name="wmfdata-test-session-api-2")
+    assert s1 is not s2
+    assert wmf.spark.get_active_session() is s2
+    # clean up
+    s2.stop()
+    log_test_passed("Spark Session APIs")
+
 def test_read_via_spark():
     test_data_1_via_spark = wmf.spark.run(READ_TABLE_1)
     assert_dataframes_match(TEST_DATA_1, test_data_1_via_spark)
@@ -190,6 +202,7 @@ def main():
 
     test_read_via_hive()
     test_silent_command_via_hive()
+    test_spark_session_apis()
     test_read_via_spark()
     test_silent_command_via_spark()
     test_read_via_presto()
