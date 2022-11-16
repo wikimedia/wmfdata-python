@@ -27,6 +27,7 @@ findspark.init(SPARK_HOME)
 import pyspark
 from pyspark import SparkContext
 from pyspark.sql import SparkSession
+import py4j
 
 """
 Predefined spark sessions and configs for use with the get_session and run functions.
@@ -82,9 +83,16 @@ def get_active_session():
     Spark 3 includes a native getActiveSession function. Once we end Spark 2
     support, we can switch to that.
     """
-    if SparkContext._jvm:
+    try:
         if SparkContext._jvm.SparkSession.active():
             return SparkSession.builder.getOrCreate()
+    except (
+        # If a session has never been started
+        AttributeError,
+        # If the most recent session was stopped
+        py4j.protocol.Py4JJavaError
+    ):
+        return None
 
 def create_custom_session(
     master="local[2]",
