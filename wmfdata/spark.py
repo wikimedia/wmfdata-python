@@ -152,14 +152,17 @@ def create_custom_session(
 
             # Ship conda_packed_file to each YARN worker, unless a previous session has done it already.
             conda_spark_archive = f"{conda_packed_file}#{conda_packed_name}"
-            if not old_session and "spark.yarn.dist.archives" in spark_config:
-                spark_config["spark.yarn.dist.archives"] += f",{conda_spark_archive}"
-            elif not old_session:
-                spark_config["spark.yarn.dist.archives"] = conda_spark_archive
-                print_err(f"Will ship {conda_packed_file} to remote Spark executors.")
+            # Hack: set 'spark.yarn.dist.archives' only if this is the first created session
+            # otherwise, the default SparkConf will already have this set.
+            # see https://github.com/wikimedia/wmfdata-python/pull/36#discussion_r1023307058
+            if not old_session:
+                if "spark.yarn.dist.archives" in spark_config:
+                    spark_config["spark.yarn.dist.archives"] += f",{conda_spark_archive}"
+                else:
+                    spark_config["spark.yarn.dist.archives"] = conda_spark_archive
+                    print_err(f"Will ship {conda_packed_file} to remote Spark executors.")
             else:
-                print_err(f"Skipping sending {conda_packed_file} to remote Spark executors "
-                          f"since an old session already did it.")
+                print_err(f"Will ship {conda_packed_file} to remote Spark executors.")
 
             # Workers should use python from the unpacked conda env.
             os.environ["PYSPARK_PYTHON"] = f"{conda_packed_name}/bin/python3"
