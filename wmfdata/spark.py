@@ -86,6 +86,8 @@ def get_active_session():
     try:
         if SparkContext._jvm.SparkSession.active():
             return SparkSession.builder.getOrCreate()
+        else:
+            return None
     except (
         # If a session has never been started
         AttributeError,
