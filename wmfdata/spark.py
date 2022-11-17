@@ -139,9 +139,9 @@ def create_custom_session(
             category=FutureWarning
         )
 
-    old_session = get_active_session()
-    if old_session:
-        old_session.stop()
+    session = get_active_session()
+    if session:
+        session.stop()
 
     if master == "yarn":
         if ship_python_env:
@@ -152,20 +152,25 @@ def create_custom_session(
 
             # Ship conda_packed_file to each YARN worker, unless a previous session has done it already.
             conda_spark_archive = f"{conda_packed_file}#{conda_packed_name}"
-            # Hack: For some reason, the SparkConf associated with a previous SparkContext persists.
-            # Therefore, we should only set 'spark.yarn.dist.archives' if the SparkConf doesn't have it
-            # as otherwise we will get a dist cache exception.
-            # see https://github.com/wikimedia/wmfdata-python/pull/36#discussion_r1023307058
-            is_archive_set = old_session and \
-                old_session.sparkContext.getConf().contains("spark.yarn.dist.archives")
+
+            # Spark config values persist within the Python process even after sessions are
+            # stopped. If a previous session in this process shipped the environment, the file
+            # will already be present in `spark.yarn.dist.archives`. If we blindly add it a
+            # second time, it will cause an error.
+            previous_files_shipped = pyspark.SparkConf().get("spark.yarn.dist.archives")
+
+            is_archive_set = (
+                previous_files_shipped is not None
+                and conda_spark_archive in previous_files_shipped
+            )
+
             if not is_archive_set:
                 if "spark.yarn.dist.archives" in spark_config:
                     spark_config["spark.yarn.dist.archives"] += f",{conda_spark_archive}"
                 else:
                     spark_config["spark.yarn.dist.archives"] = conda_spark_archive
-                    print_err(f"Will ship {conda_packed_file} to remote Spark executors.")
-            else:
-                print_err(f"Will ship {conda_packed_file} to remote Spark executors.")
+
+            print_err(f"Shipping {conda_packed_file} to remote Spark executors.")
 
             # Workers should use python from the unpacked conda env.
             os.environ["PYSPARK_PYTHON"] = f"{conda_packed_name}/bin/python3"
