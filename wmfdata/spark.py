@@ -152,10 +152,13 @@ def create_custom_session(
 
             # Ship conda_packed_file to each YARN worker, unless a previous session has done it already.
             conda_spark_archive = f"{conda_packed_file}#{conda_packed_name}"
-            # Hack: set 'spark.yarn.dist.archives' only if this is the first created session
-            # otherwise, the default SparkConf will already have this set.
+            # Hack: For some reason, the SparkConf associated with a previous SparkContext persists.
+            # Therefore, we should only set 'spark.yarn.dist.archives' if the SparkConf doesn't have it
+            # as otherwise we will get a dist cache exception.
             # see https://github.com/wikimedia/wmfdata-python/pull/36#discussion_r1023307058
-            if not old_session:
+            is_archive_set = old_session and \
+                old_session.sparkContext.getConf().contains("spark.yarn.dist.archives")
+            if not is_archive_set:
                 if "spark.yarn.dist.archives" in spark_config:
                     spark_config["spark.yarn.dist.archives"] += f",{conda_spark_archive}"
                 else:
