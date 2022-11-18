@@ -1,8 +1,9 @@
-from threading import Timer
+from typing import List, Union
 import warnings
 import os
 
 import findspark
+import pandas as pd
 
 from wmfdata import conda
 from wmfdata.utils import (
@@ -12,20 +13,21 @@ from wmfdata.utils import (
     python_version
 )
 
-"""
-Will be used for findspark.init().
-"""
+
 if conda.is_anaconda_wmf_env():
     default_spark = "/usr/lib/spark2"
 else:
     default_spark = "/usr/lib/spark3"
 SPARK_HOME = os.environ.get("SPARK_HOME", default_spark)
-if SPARK_HOME == "/usr/lib/spark2":
-    warnings.warn(
-        "Spark2 has been deprecated. Please upgrade your jobs to Spark3. "
-        "See https://wikitech.wikimedia.org/wiki/Analytics/Systems/Cluster/Spark/Migration_to_Spark_3 for details.",
-        category=FutureWarning
-    )
+
+# This is not necessary in a conda-analytics environment. Once we stop supporting anaconda-wmf
+# environments, we can drop this line and the dependency on findspark.
+findspark.init(SPARK_HOME)
+
+import pyspark
+from pyspark import SparkContext
+from pyspark.sql import SparkSession
+import py4j
 
 """
 Predefined spark sessions and configs for use with the get_session and run functions.
@@ -74,7 +76,27 @@ ENV_VARS_TO_PROPAGATE = [
     'no_proxy',
 ]
 
-def get_custom_session(
+def get_active_session():
+    """
+    Returns the active session if there is one and None otherwise.
+
+    Spark 3 includes a native getActiveSession function. Once we end Spark 2
+    support, we can switch to that.
+    """
+    try:
+        if SparkContext._jvm.SparkSession.active():
+            return SparkSession.builder.getOrCreate()
+        else:
+            return None
+    except (
+        # If a session has never been started
+        AttributeError,
+        # If the most recent session was stopped
+        py4j.protocol.Py4JJavaError
+    ):
+        return None
+
+def create_custom_session(
     master="local[2]",
     app_name="wmfdata-custom",
     spark_config={},
@@ -82,13 +104,10 @@ def get_custom_session(
     conda_pack_kwargs={}
 ):
     """
-    Returns an existent SparkSession, or a new one if one hasn't yet been created.
+    Creates a new Spark session, stopping any existing session first.
 
-    Use this instead of get_session if you'd rather have manual control over
+    Use this instead of create_session if you'd rather have manual control over
     your SparkSession configuration.
-
-    Note: master, app_name and spark_config are only applied the first time
-    this function is called.  All subsequent calls will return the first created SparkSession.
 
     Arguments:
     * `master`: passed to SparkSession.builder.master()
@@ -112,6 +131,18 @@ def get_custom_session(
     """
     check_kerberos_auth()
 
+    if SPARK_HOME == "/usr/lib/spark2":
+        warnings.warn(
+            "\n    Spark 2 has been deprecated. Please migrate to Spark 3."
+            "\n    See https://wikitech.wikimedia.org/wiki/Analytics/Systems/Cluster/Spark/"
+            "Migration_to_Spark_3",
+            category=FutureWarning
+        )
+
+    session = get_active_session()
+    if session:
+        session.stop()
+
     if master == "yarn":
         if ship_python_env:
             # The path to our packed conda environment.
@@ -119,13 +150,27 @@ def get_custom_session(
             # This will be used as the unpacked directory name in the YARN working directory.
             conda_packed_name = os.path.splitext(os.path.basename(conda_packed_file))[0]
 
-            # Ship conda_packed_file to each YARN worker.
+            # Ship conda_packed_file to each YARN worker, unless a previous session has done it already.
             conda_spark_archive = f"{conda_packed_file}#{conda_packed_name}"
-            if "spark.yarn.dist.archives" in spark_config:
-                spark_config["spark.yarn.dist.archives"] += f",{conda_spark_archive}"
-            else:
-                spark_config["spark.yarn.dist.archives"] = conda_spark_archive
-            print_err(f"Will ship {conda_packed_file} to remote Spark executors.")
+
+            # Spark config values persist within the Python process even after sessions are
+            # stopped. If a previous session in this process shipped the environment, the file
+            # will already be present in `spark.yarn.dist.archives`. If we blindly add it a
+            # second time, it will cause an error.
+            previous_files_shipped = pyspark.SparkConf().get("spark.yarn.dist.archives")
+
+            is_archive_set = (
+                previous_files_shipped is not None
+                and conda_spark_archive in previous_files_shipped
+            )
+
+            if not is_archive_set:
+                if "spark.yarn.dist.archives" in spark_config:
+                    spark_config["spark.yarn.dist.archives"] += f",{conda_spark_archive}"
+                else:
+                    spark_config["spark.yarn.dist.archives"] = conda_spark_archive
+
+            print_err(f"Shipping {conda_packed_file} to remote Spark executors.")
 
             # Workers should use python from the unpacked conda env.
             os.environ["PYSPARK_PYTHON"] = f"{conda_packed_name}/bin/python3"
@@ -143,26 +188,9 @@ def get_custom_session(
         elif os.path.isfile(os.path.join(f"/usr/bin/python{python_version()}")):
             os.environ["PYSPARK_PYTHON"] = f"/usr/bin/python{python_version()}"
 
-        if "PYSPARK_PYTHON" in os.environ:
-            print_err(
-                "PySpark executors will use {}.".format(os.environ["PYSPARK_PYTHON"])
-            )
-
     # NOTE: We don't need to touch PYSPARK_PYTHON if master != yarn.
     # The default set by findspark will be fine.
 
-    # Call findspark.init after PYSPARK_PYTHON has possibly been set.
-    # This is needed because findspark will set PYSPARK_PYTHON path
-    # to sys.executable if it isn't yet set, which will likely not
-    # work in YARN mode if sys.executlable is a local conda or virtualenv
-    # (as is the case in WMF Jupyter Notebooks).
-    findspark.init(SPARK_HOME)
-    from pyspark.sql import SparkSession
-
-    # NOTE: if there's an existing session, it will be returned with its
-    # existing settings even if the user has specified a different set of
-    # settings in this function call. There will be no indication that
-    # this has happened.
     builder = (
         SparkSession.builder
         .master(master)
@@ -183,14 +211,15 @@ def get_custom_session(
 
     return builder.getOrCreate()
 
-def get_session(
+def create_session(
     type="yarn-regular",
     app_name=None,
     extra_settings={},
     ship_python_env=False,
 ):
     """
-    Returns a Spark session based on one of the PREDEFINED_SPARK_SESSION types.
+    Creates a new Spark session based on one of the PREDEFINED_SPARK_SESSION
+    types, stopping any existing session first.
 
     Arguments:
     * `type`: the type of Spark session to create.
@@ -222,7 +251,7 @@ def get_session(
     # Add in any extra settings, overwriting if applicable
     config.update(extra_settings)
 
-    return get_custom_session(
+    return create_custom_session(
         master=PREDEFINED_SPARK_SESSIONS[type]["master"],
         app_name=app_name,
         spark_config=config,
@@ -230,107 +259,44 @@ def get_session(
     )
 
 
-def get_application_id(session):
-    return session.sparkContext.applicationId
-
-# A cache mapping Spark sessions to off-main-thread timers stopping them
-# after an hour.
-session_timeouts = {}
-
-def cancel_session_timeout(session):
-    """
-    Checks whether a timeout is set for a particular Spark session
-    and cancels it if it exists.
-    """
-
-    application_id = get_application_id(session)
-
-    timeout = session_timeouts.get(application_id)
-    if timeout:
-        timeout.cancel()
-        # Delete the stopped thread from `session_timeouts` as a sign
-        # that the session was not stopped.
-        del session_timeouts[application_id]
-
-
-def stop_session(session):
-    """
-    Cancels any session timers and stops the SparkSession.
-    """
-    cancel_session_timeout(session)
-    session.stop()
-
-def start_session_timeout(session, timeout_seconds=3600):
-    """
-    Starts an off-main-thread timer stopping a Spark session after an hour.
-    """
-    application_id = get_application_id(session)
-
-    # Cancel any existing timeout on the same session
-    cancel_session_timeout(session)
-
-    # When the timeout executes, leave the stopped thread in `session_timeouts`
-    # as a sign that the session was stopped.
-    timeout = Timer(timeout_seconds, stop_session, args=[session])
-    # Make sure this timeout won't block exit
-    timeout.daemon = True
-    session_timeouts[application_id] = timeout
-    timeout.start()
-
-def run(commands, session_type="yarn-regular", extra_settings={}):
+def run(commands: Union[str, List[str]]) -> pd.DataFrame:
     """
     Runs SQL commands against the Hive tables in the Data Lake using the
     PySpark SQL interface.
 
-    Note: The session_type and extra_settings will only be applied
-    the first time this function is called.  The SparkSession is only instantiated
-    once per process, and each subsequent call will re-use the previously
-    created SparkSession.
+    Note: this command will use the existing Spark session if there is one and
+    otherwise create a predefined "yarn-regular" session. If you want to use
+    a different type of session, use `create_session` or `create_custom_session`
+    first.
+
+    Note: this function loads all the output into memory on the client. If
+    your command produces many gigabytes of output, it could cause an
+    out-of-memory error.
 
     Arguments:
     * `commands`: the SQL to run. A string for a single command or a list of
       strings for multiple commands within the same session (useful for things
       like setting session variables). Passing more than one query is *not*
       supported; only results from the second will be returned.
-    * `session_type`: the type of Spark session to create.
-        * "local": Run the command in a local Spark process. Use this for
-          prototyping or querying small-ish data (less than a couple of GB).
-        * "yarn-regular": the default; able to use up to 15% of Hadoop cluster
-          resources
-        * "yarn-large": for queries which require more processing (e.g. joins) or
-          which access more data; able to use up to 30% of Hadoop cluster
-          resources.
-    * `extra_settings`: A dict of additional settings to use when creating
-      the Spark session. These will override the defaults specified
-      by `session_type`.
     """
 
     commands = ensure_list(commands)
 
-    # TODO: Switching the Spark session type has no effect if the previous
-    # session is still running.
-    spark_session = get_session(
-      type=session_type,
-      extra_settings=extra_settings
-    )
-    
+    session = get_active_session()
+    if not session:
+        session = create_session() 
+
     overall_result = None
 
     for cmd in commands:
-        cmd_result = spark_session.sql(cmd)
+        cmd_result = session.sql(cmd)
         # If the result has columns, the command was a query and therefore
         # results-producing. If not, it was a DDL or DML command and not
         # results-producing.
         if len(cmd_result.columns) > 0:
             overall_result = cmd_result
-    
+
     if overall_result:
         overall_result = overall_result.toPandas()
-
-    # (re)start a timeout on SparkSessions in Yarn after the result is collected.
-    # A SparkSession used by this run function
-    # will timeout after 5 minutes, unless used again.
-    if PREDEFINED_SPARK_SESSIONS[session_type]["master"] == "yarn":
-        start_session_timeout(spark_session, 3600)
 
     return overall_result

@@ -8,9 +8,6 @@ import pandas as pd
 import wmfdata as wmf
 from wmfdata.utils import print_err
 
-import findspark
-findspark.init("/usr/lib/spark2")
-
 this_directory = str(Path(__file__).parent.resolve())
 
 # To do: This way of specifying the Hive database makes it impossible to 
@@ -51,7 +48,7 @@ def assert_dataframes_match(df1, df2):
     assert df1.columns.equals(df2.columns)
 
 def set_up_table_1(): 
-    spark = wmf.spark.get_session(type="local", app_name="wmfdata-test")
+    spark = wmf.spark.create_session(type="local", app_name="wmfdata-test")
     spark_df = spark.read.load(f"file://{this_directory}/test_data_1.parquet")
     spark_df.write.mode("overwrite").saveAsTable(f"{hive_db}.wmfdata_test_1")
 
@@ -121,6 +118,18 @@ def test_silent_command_via_hive():
    output = wmf.hive.run(SILENT_COMMAND)
    assert output is None
    log_test_passed("Silent command via Hive")
+
+def test_spark_session_apis():
+    # once create_session() is called, we should be able to retrieve it via get_active_session()
+    s1 = wmf.spark.create_session(type="local", app_name="wmfdata-test-session-api-1")
+    assert wmf.spark.get_active_session() is s1
+    # a later call to create_session() closes any previous session and returns a new one
+    s2 = wmf.spark.create_session(type="local", app_name="wmfdata-test-session-api-2")
+    assert s1 is not s2
+    assert wmf.spark.get_active_session() is s2
+    # clean up
+    s2.stop()
+    log_test_passed("Spark Session APIs")
 
 def test_read_via_spark():
     test_data_1_via_spark = wmf.spark.run(READ_TABLE_1)
@@ -193,6 +202,7 @@ def main():
 
     test_read_via_hive()
     test_silent_command_via_hive()
+    test_spark_session_apis()
     test_read_via_spark()
     test_silent_command_via_spark()
     test_read_via_presto()
