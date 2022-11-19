@@ -1,24 +1,24 @@
 # Next version
-This version includes many breaking changes; the tag "breaking change" is bolded for the most serious ones.
-
 ## Spark
-* Spark 2 has been deprecated, and Spark sessions will now pick up Spark 3 by default. Please see [Migration to Spark3](https://wikitech.wikimedia.org/wiki/Analytics/Systems/Cluster/Spark/Migration_to_Spark_3) for documentation on how to migrate your jobs. See also instructions on how to override the Spark version on [Choosing between Spark3 and Spark2](https://wikitech.wikimedia.org/wiki/Analytics/Systems/Jupyter#Choosing_between_Spark3_and_Spark2).
-* **Breaking change**: the `get_session` and `get_custom_session` functions have been renamed to `create_session` and `create_custom_sesson`. They will now stop any existing session before creating the new session. This means that the returned session will always reflect the passed settings; previously, the settings were silently ignored if a session already existed. Use the new `get_active_session` function if you want to non-destructively retrieve the active session. 
-* **Breaking change**: the deprecated "raw" format and the non-deprecated `format` parameter have been removed from the `run` function.
-* **Breaking change**: the `run` function no longer has the ability to specify Spark settings, as the `session_type` and `extra_settings` parameters have been removed. If a session already exists, it will be used. Otherwise, a default "yarn-regular" session will be created and used.
-* Previously, in some cases, the package automatically closed sessions after 30 minutes of apparent inactivity. It no longer does this.
-  * Breaking change: the `get_application_id`, `cancel_session_timeout`, `stop_session`, and `start_session_timeout` functions have been removed. These were just intended for internal use, so it's unlikely that you will have to change code.
+* **🚨 Breaking change**: `spark.get_session` and `spark.get_custom_session` have been renamed to `spark.create_session` and `spark.create_custom_sesson`.
+
+  If a session already exists, the functions will now stop it and create a new session rather than returning the existing one and silently ignoring the passed settings. Use the new `get_active_session` function if you just want to retrieve the active session.
+* **🚨 Breaking change**: `spark.run` no longer has the ability to specify Spark settings; the `session_type` and `extra_settings` parameters have been removed. If no session exists, a default "yarn-regular" session will be created. If you want to customize the session, use `create_session` or `create_custom_session` first.
+* Breaking change: `hive.run` only provides results as a Pandas dataframe. The "raw" format and the `format` parameter have been removed.
+* Wmfdata no longer tries to close Spark sessions after 30 minutes of inactivity. Please be conscious of your resource use and shut down notebooks when you are done with them.
+* Breaking change: the internal `get_application_id`, `cancel_session_timeout`, `stop_session`, and `start_session_timeout` functions used to automatically close sessions have been removed.
+* Spark 3 will automatically be used instead of Spark 2 inside new `conda-analytics` environments.
 
 ## Hive
-* Breaking change: the deprecated `run_cli` function has been removed.
-* Breaking change: the deprecated `heap_size` and `engine` parameters of the `run` function have been removed.
-* **Breaking change**: the deprecated "raw" format and the non-deprecated `format` parameter have been removed from the `run` function.
+* Breaking change: `hive.run` only provides results as a Pandas dataframe. The "raw" format and the `format` parameter have been removed.
+* Breaking change: `hive.run_cli` has been removed. Use `hive.run` instead.
+* Breaking change: the `heap_size` and `engine` parameters have been removed from `hive.run`.
 
 ## MariaDB
-* **Breaking change**: the deprecated "raw" format and the non-deprecated `format` parameter have been removed from the `run` function.
+* Breaking change: `mariadb.run` only provides results as a Pandas dataframe. The "raw" format and the `format` parameter have been removed.
 
 ## Charting
-* Breaking change: The `charting` module has been removed. It was not previously deprecated but was created to hold Neil Shah-Quinn's custom Matplotlib configuration back when this was his personal package, so it is unlikely to be used by others.
+* Breaking change: The `charting` module has been removed.
 
 # 1.4.0 (20 October 2022)
 * `mariadb.run` now uses the MariaDB Python connector library rather than the MySQL one, which fixes several errors ([T319360](https://phabricator.wikimedia.org/T319360)).

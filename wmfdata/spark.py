@@ -1,5 +1,4 @@
 from typing import List, Union
-import warnings
 import os
 
 import findspark
@@ -9,7 +8,6 @@ from wmfdata import conda
 from wmfdata.utils import (
     check_kerberos_auth,
     ensure_list,
-    print_err,
     python_version
 )
 
@@ -61,7 +59,7 @@ PREDEFINED_SPARK_SESSIONS = {
     }
 }
 
-# Add previous session "type" keys for backwards compatibility.
+# Add simple session type aliases
 PREDEFINED_SPARK_SESSIONS["regular"] = PREDEFINED_SPARK_SESSIONS["yarn-regular"]
 PREDEFINED_SPARK_SESSIONS["large"] = PREDEFINED_SPARK_SESSIONS["yarn-large"]
 
@@ -113,7 +111,7 @@ def create_custom_session(
     * `master`: passed to SparkSession.builder.master()
       If this is "yarn" and and a conda env is active and and ship_python_env=False,
       remote executors will be configured to use conda.conda_base_env_prefix(),
-      which for Spark2 defaults to anaconda-wmf and for Spark3 defalts to conda-analytics.
+      which for Spark 2 defaults to anaconda-wmf and for Spark 3 defalts to conda-analytics.
       This should usually work as both are installed on all WMF YARN worker nodes.
       If your conda environment has required packages installed that are not in those, set
       ship_python_env=True.
@@ -130,14 +128,6 @@ def create_custom_session(
       If True, this will fail if conda and conda_pack are not installed.
     """
     check_kerberos_auth()
-
-    if SPARK_HOME == "/usr/lib/spark2":
-        warnings.warn(
-            "\n    Spark 2 has been deprecated. Please migrate to Spark 3."
-            "\n    See https://wikitech.wikimedia.org/wiki/Analytics/Systems/Cluster/Spark/"
-            "Migration_to_Spark_3",
-            category=FutureWarning
-        )
 
     session = get_active_session()
     if session:
@@ -170,7 +160,7 @@ def create_custom_session(
                 else:
                     spark_config["spark.yarn.dist.archives"] = conda_spark_archive
 
-            print_err(f"Shipping {conda_packed_file} to remote Spark executors.")
+            print(f"Shipping {conda_packed_file} to remote Spark executors.")
 
             # Workers should use python from the unpacked conda env.
             os.environ["PYSPARK_PYTHON"] = f"{conda_packed_name}/bin/python3"

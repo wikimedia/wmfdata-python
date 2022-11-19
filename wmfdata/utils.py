@@ -11,7 +11,11 @@ import pandas as pd
 import requests
 
 def print_err(*args, **kwargs):
-    print(*args, file=sys.stderr, **kwargs)
+    print(*args, file=sys.stderr, sep="\n\n", **kwargs)
+
+    # In Jupyter notebooks, std_err messages are highlighted in red. This puts a non-highlighted
+    # line afterward to more clearly separate this from other messages.
+    print()
 
 def sig_figs(x, n_figs):
     exponent = floor(log10(abs(x)))

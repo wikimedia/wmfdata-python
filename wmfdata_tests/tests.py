@@ -6,7 +6,6 @@ import re
 
 import pandas as pd
 import wmfdata as wmf
-from wmfdata.utils import print_err
 
 this_directory = str(Path(__file__).parent.resolve())
 
@@ -40,7 +39,7 @@ TEST_DATA_1 = pd.read_parquet(f"{this_directory}/test_data_1.parquet", engine="p
 TEST_DATA_2 = pd.read_csv(f"{this_directory}/test_data_2.csv")
 
 def log_test_passed(test_name):
-    print_err(f"TEST PASSED: {test_name}") 
+    print(f"TEST PASSED: {test_name}")
 
 def assert_dataframes_match(df1, df2):
     assert df1.equals(df2)
