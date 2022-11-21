@@ -27,11 +27,16 @@ try:
         if conda.is_anaconda_wmf_env():
             update_command += " --ignore-installed"
 
-        utils.print_err(
+        message = [
             f"You are using Wmfdata v{metadata.version}, but v{remote['version']} is available.",
             f"To update, run `{update_command}`.",
             f"To see the changes, refer to {metadata.source}/blob/release/CHANGELOG.md.",
-        )
+        ]
+
+        if remote["is_new_major_version"]:
+            message.insert(1, "This is major upgrade, so breaking changes are likely!")
+
+        utils.print_err(*message)
 
 # If the file with the version info is ever moved, or the code hosting changes, and so
 # on, it will make all previous versions of the version check fail, so we should turn
