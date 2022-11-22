@@ -8,8 +8,6 @@ try:
 except ImportError:
     conda_installed = False
 
-from wmfdata.utils import print_err
-
 """
 Default kwargs to pass to conda_pack.pack.
 """
@@ -125,10 +123,9 @@ def pack(**conda_pack_kwargs):
 
     conda_packed_file = kwargs["output"]
     if os.path.isfile(conda_packed_file) and not kwargs["force"]:
-        print_err(
-            f"A conda environment is already packed at {conda_packed_file}. "
-            "If you have recently installed new packages into your conda env, set "
-            "force=True in conda_pack_kwargs and it will be repacked for you."
+        print(
+            "The requested conda environment has already been packed.\n"
+            "If you want it to be repacked, set force=True in conda_pack_kwargs."
         )
         return conda_packed_file
     else:

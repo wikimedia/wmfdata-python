@@ -6,12 +6,16 @@ import subprocess
 import sys
 
 from IPython.display import HTML
-from packaging import version
+from packaging.version import Version
 import pandas as pd
 import requests
 
 def print_err(*args, **kwargs):
-    print(*args, file=sys.stderr, **kwargs)
+    print(*args, file=sys.stderr, sep="\n\n", **kwargs)
+
+    # In Jupyter notebooks, std_err messages are highlighted in red. This puts a non-highlighted
+    # line afterward to more clearly separate this from other messages.
+    print()
 
 def sig_figs(x, n_figs):
     exponent = floor(log10(abs(x)))
@@ -113,11 +117,15 @@ def check_remote_version(source_url, local_version):
     r.raise_for_status()
 
     remote_version = re.search('(([0-9]+\\.?){2,3})', r.text).group()
+    remote_version = Version(remote_version)
+    local_version = Version(local_version)
 
     d = {
-        'version': remote_version,
-        'is_newer': version.parse(remote_version) > version.parse(local_version)
+        'version': str(remote_version),
+        'is_newer': remote_version > local_version,
+        'is_new_major_version': remote_version.major > local_version.major
     }
+
     return d
 
 def check_kerberos_auth():
