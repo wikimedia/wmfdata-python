@@ -18,11 +18,15 @@ urllib3.disable_warnings(SubjectAltNameWarning)
 def run(commands, catalog="analytics_hive"):
     """
     Runs one or more SQL commands using the Presto SQL engine and returns the last result
-    in a Pandas DataFrame.
+    in a Pandas dataframe.
     
-    Presto can be connected to many different backend data stores, or catalogs.
-    Currently it is only connected to the Data Lake, with has the catalog name "analytics_hive".
+    Presto can` be connected to many different backend data catalogs. Currently, it is only connected to the Data Lake, which has the catalog name "analytics_hive".
 
+    Arguments:
+    * `commands`: the SQL to run. A string for a single command or a list of
+      strings for multiple commands within the same session (useful for things
+      like setting session variables). Passing more than one query is not
+      supported; only results from the second will be returned.
     """
     commands = ensure_list(commands)
     check_kerberos_auth()
