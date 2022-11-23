@@ -29,6 +29,8 @@ If you're using a `conda-analytics` environment, it's much easier!
     > Given a version number MAJOR.MINOR.PATCH, increment the: MAJOR version when you make incompatible API changes, MINOR version when you add functionality in a backwards compatible manner, and PATCH version when you make backwards compatible bug fixes.
 6. Update the version number in `wmfdata/metadata.py`.
 7. Update `CHANGELOG.md` with all of the noteworthy changes in the release.
+7. If there are any new user-facing methods, add them to the [quickstart notebook](quickstart.ipynb).
+7. In any case, re-run the quickstart notebook to ensure that it's fully up to date.
 8. Commit your changes using the commit message "Make version X.Y.Z".
 9. Tag the commit you just made with the version (`git tag -a vX.Y.Z -m "version X.Y.Z"`).
 10. Push the new commit and tag to the origin (`git push --follow-tags`). 

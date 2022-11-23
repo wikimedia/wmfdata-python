@@ -105,7 +105,6 @@ def run(
         * a wiki's database code (e.g. "enwiki", "arwiktionary", "wikidatawiki")
           for its MediaWiki database (or its ExtensionStorage database if
           `use_x1` is passed)
-        * "logs" for the EventLogging
         * "centralauth" for global accounts
         * "wikishared" for cross-wiki ExtensionStorage
         * "staging" for user-writable ad-hoc tests and analysis
