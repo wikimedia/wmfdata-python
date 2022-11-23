@@ -1,4 +1,4 @@
-# Next version
+# 2.0.0 (22 November 2022)
 ## Spark
 * **🚨 Breaking change**: `spark.get_session` and `spark.get_custom_session` have been renamed to `spark.create_session` and `spark.create_custom_sesson`.
 
@@ -19,6 +19,10 @@
 
 ## Charting
 * Breaking change: The `charting` module has been removed.
+
+## Other
+* Warnings and notices have been streamlined and improved.
+* A completely overhauled [quickstart notebook](docs/quickstart.ipynb) provides a comprehensive introduction to Wmfdata's features.
 
 # 1.4.0 (20 October 2022)
 * `mariadb.run` now uses the MariaDB Python connector library rather than the MySQL one, which fixes several errors ([T319360](https://phabricator.wikimedia.org/T319360)).
