@@ -91,7 +91,10 @@ def df_to_remarkup(df):
     Prints a Pandas dataframe as a Remarkup table suitable for pasting into
     Phabricator.
 
-    Best used via the `pipe`, as in `my_dataframe.pipe(df_to_remarkup)`.
+    Best used via the `pipe` method, as in `my_dataframe.pipe(df_to_remarkup)`.
+
+    Note that indexes are not currently supported, so if your index contains
+    something important, you should use call `my_dataframe.reset_index` first.
     """
     # To-do: allow printing indexes
     col_count = len(df.columns)
