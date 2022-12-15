@@ -1,8 +1,21 @@
+
 from datetime import date
 
-# Import all submodules so they are accessible after `import wmfdata`. utils must go
-# first to prevent circular import issues. Other submodules can depend on utils and/or conda ONLY.
-from wmfdata import utils, conda
+# We want to import all the modules here so they are accessible after a 
+# simple `import wmfdata`. 
+# 
+# First, we import `utils`, which should not depend on any other wmfdata modules.
+from wmfdata import utils
+
+# After importing `utils`, we import the low-level modules, which should not
+# depend on wmfdata modules other than `utils`.
+from wmfdata import (
+    conda,
+    hdfs
+)
+
+# After importing the low-level modules, we import the high-level modules,
+# which should not depend on other high-level modules.
 from wmfdata import (
     hive,
     mariadb,
