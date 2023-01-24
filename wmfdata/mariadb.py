@@ -91,7 +91,7 @@ def connect(db, use_x1=False):
 # To-do: provide an easy way to get lists of wikis
 def run(
   commands, dbs, use_x1=False, format="pandas", date_col=None,
-  index_col=None
+  index_col=None, params=None,
 ):
     """
     Run SQL queries or commands on the Analytics MediaWiki replicas.
@@ -115,6 +115,9 @@ def run(
       datetimes into Pandas datetimes.
     * `index_col`: passed to pandas.read_sql_query to set a columns or columns
       as the index.
+    * `params`: passed to pandas.read_sql_query to provide parameters for the
+      SQL query. The MariaDB Python connector uses the qmark parameter style
+      specified in PEP 249.
     """
 
     # Make single command and database parameters lists
@@ -143,7 +146,8 @@ def run(
                     command,
                     connection,
                     index_col=index_col,
-                    parse_dates=date_col
+                    parse_dates=date_col,
+                    params=params,
                 )
             # pandas will encounter a TypeError with DDL (e.g. CREATE TABLE) or
             # DML (e.g. INSERT) statements
