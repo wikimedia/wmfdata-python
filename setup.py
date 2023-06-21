@@ -23,7 +23,10 @@ setup(
         # This is the latest version which supports MariaDB Connector/C 3.1.16,
         # which is the version currently available on the analytics clients
         "mariadb==1.0.11",
-        "pandas>=0.20.1", # 0.20.1 introduced the errors module
+        # Pandas 1.0 is the the first to support None as a value for
+        # `display.max_colwidth`
+        # https://github.com/pandas-dev/pandas/issues/31532
+        "pandas>=1.0",
         "packaging",
         "pyarrow",
         "requests",
