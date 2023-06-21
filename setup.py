@@ -20,7 +20,6 @@ setup(
     install_requires=[
         "IPython",
         "findspark",
-        "matplotlib>=2.1", # 2.1 introduced ticker.PercentFormatter
         # This is the latest version which supports MariaDB Connector/C 3.1.16,
         # which is the version currently available on the analytics clients
         "mariadb==1.0.11",
