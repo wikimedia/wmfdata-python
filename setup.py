@@ -33,6 +33,12 @@ setup(
         "requests_kerberos",
         "presto-python-client",
         "pyhive[hive]",
+        # Urllib3 2.0 removes support for finding the host name in the 
+        # key certificate's commonName field during TLS authentication,
+        # which makes it impossible for presto-python-client to connect 
+        # to our Presto coordinator
+        # https://phabricator.wikimedia.org/T345309
+        "urllib3<2"
     ],
     packages=find_packages(),
     python_requires=">=3",
