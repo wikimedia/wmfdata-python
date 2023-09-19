@@ -16,6 +16,7 @@ When you work on changes to this package, you will want an easily-accessible loc
 6. Update the version number in `wmfdata/metadata.py`.
 7. Update `CHANGELOG.md` with all of the noteworthy changes in the release.
 7. If there are any new user-facing methods, add them to the [quickstart notebook](quickstart.ipynb).
+7. Reinstall your local copy of Wmfdata using `pip install -e`. This ensures that the quickstart notebook will display the new version number.
 7. In any case, re-run the quickstart notebook to ensure that it's fully up to date.
 8. Commit your changes using the commit message "Make version X.Y.Z".
 9. Tag the commit you just made with the version (`git tag -a vX.Y.Z -m "version X.Y.Z"`).

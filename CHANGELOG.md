@@ -1,3 +1,9 @@
+# 2.0.1 (18 September 2023)
+* Urllib3 is now pinned below 2.0 to avoid errors when querying Presto ([T345309](https://phabricator.wikimedia.org/T345309)).
+* Matplotlib is no longer specified as a dependency, since the `charting` module was removed in 2.0.
+* `utils.pd_display_all` uses a different method to disable Pandas's `display.max_colwidth` in order to support Pandas 2.0 and higher.
+* Various documentation improvements.
+
 # 2.0.0 (22 November 2022)
 ## Spark
 * **🚨 Breaking change**: `spark.get_session` and `spark.get_custom_session` have been renamed to `spark.create_session` and `spark.create_custom_sesson`.
