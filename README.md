@@ -12,16 +12,9 @@ Other features include:
 For an introduction to using Wmfdata, see [the quickstart notebook](docs/quickstart.ipynb).
 
 ## Installation and upgrading
-Wmfdata comes preinstalled in the Conda environments used on the analytics clients.
+Wmfdata comes preinstalled in the [Conda environments used on the analytics clients](https://wikitech.wikimedia.org/wiki/Data_Engineering/Systems/Conda).
 
-The command to upgrade to the latest version depends on whether you are using an `anaconda-wmf` or `conda-analytics` environment. To find out which you're using, consult [the Conda page on Wikitech](https://wikitech.wikimedia.org/wiki/Analytics/Systems/Conda).
-
-In an `anaconda-wmf` environment, use:
-```
-pip install --upgrade git+https://github.com/wikimedia/wmfdata-python.git@release --ignore-installed
-```
-
-In a `conda-analytics` environment, use:
+To upgrade to a newer version, use:
 ```
 pip install --upgrade git+https://github.com/wikimedia/wmfdata-python.git@release
 ```
