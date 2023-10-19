@@ -47,9 +47,7 @@ def assert_dataframes_match(df1, df2):
     assert df1.columns.equals(df2.columns)
 
 def set_up_table_1(): 
-    spark = wmf.spark.create_session(type="local", app_name="wmfdata-test")
-    spark_df = spark.read.load(f"file://{this_directory}/test_data_1.parquet")
-    spark_df.write.mode("overwrite").saveAsTable(f"{hive_db}.wmfdata_test_1")
+    wmf.spark.load_parquet("test_data_1.parquet", hive_db, hive_table="wmfdata_test_1")
 
 def set_up_mariadb_table():
     test_data_tuples = TEST_DATA_1.itertuples(index=False, name=None)
