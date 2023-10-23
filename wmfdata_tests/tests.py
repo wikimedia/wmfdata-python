@@ -221,7 +221,7 @@ def test_df_to_remarkup():
     df_to_remarkup(df_requests_dummy, index=False, floatfmt=(".0f", ".0f", ".1f"))
     output_str_2 = captured_output_2.getvalue().split("\n")[:-1]
 
-    # We have `index=False`, so the first value of row 0 should be the `http_status` value `200``.
+    # We have `index=False`, so the first value of row 0 should be the `http_status` value `200`.
     # It should also be `200` and not `200.0` as this column has been formatted to `.0f` using floatfmt.
     assert output_str_2[2].split("|")[1].strip() == "200"
     # floatfmt was used to round the third column to the first decimal place, so this percent should be `2.0`.
