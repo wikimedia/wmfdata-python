@@ -1,15 +1,17 @@
 #!/usr/bin/env python3
 import argparse
+import io
 import os
 from pathlib import Path
 import re
+import sys
 
 import pandas as pd
 import wmfdata as wmf
 
 this_directory = str(Path(__file__).parent.resolve())
 
-# To do: This way of specifying the Hive database makes it impossible to 
+# To do: This way of specifying the Hive database makes it impossible to
 # import this as a module. It would be better to have the test functions
 # take the database as an argument, and look for and pass a command line
 # argument only if it's being run as a script.
@@ -24,7 +26,7 @@ parser.add_argument(
 args = parser.parse_args()
 hive_db = args.hive_database
 
-# Theoretically, the passed database could be used to inject SQL (e.g. passing 
+# Theoretically, the passed database could be used to inject SQL (e.g. passing
 # 'wmf.webrequest --' in an attempt to drop webrequest). Practically, it
 # cannot be since analytics cluster users are all trusted and, unless they are
 # data engineers, only have write access to their own and explicitly shared
@@ -46,7 +48,7 @@ def assert_dataframes_match(df1, df2):
     assert df1.index.equals(df2.index)
     assert df1.columns.equals(df2.columns)
 
-def set_up_table_1(): 
+def set_up_table_1():
     spark = wmf.spark.create_session(type="local", app_name="wmfdata-test")
     spark_df = spark.read.load(f"file://{this_directory}/test_data_1.parquet")
     spark_df.write.mode("overwrite").saveAsTable(f"{hive_db}.wmfdata_test_1")
@@ -60,9 +62,9 @@ def set_up_mariadb_table():
     CREATE_TABLE_SQL = """
         CREATE TABLE wmfdata_test (
             month VARCHAR(255),
-            wiki VARCHAR(255), 
+            wiki VARCHAR(255),
             user_id BIGINT,
-            user_name VARCHAR(255), 
+            user_name VARCHAR(255),
             edits BIGINT,
             content_edits BIGINT,
             user_registration VARCHAR(255)
@@ -71,16 +73,16 @@ def set_up_mariadb_table():
 
     INSERT_RECORDS_SQL = f"""
         INSERT INTO
-        wmfdata_test 
+        wmfdata_test
         VALUES
         {test_data_1_records}
     """
 
     wmf.mariadb.run(
-        [CREATE_TABLE_SQL, INSERT_RECORDS_SQL], 
+        [CREATE_TABLE_SQL, INSERT_RECORDS_SQL],
         dbs=["staging"]
     )
-    
+
 def clean_tables():
     wmf.hive.run([
       f"DROP TABLE IF EXISTS {hive_db}.wmfdata_test_1",
@@ -153,12 +155,12 @@ def test_read_via_mariadb():
         """
         SELECT *
         FROM wmfdata_test
-        """, 
+        """,
         "staging"
     )
 
     assert_dataframes_match(TEST_DATA_1, test_data_1_via_mariadb)
-    
+
     log_test_passed("Read via MariaDB")
 
 def test_silent_command_via_MariaDB():
@@ -193,6 +195,39 @@ def test_sql_tuple():
 
     log_test_passed("utils.sql_tuple unit test")
 
+def test_df_to_remarkup():
+    # Test to see that we can remove indexes and format numbers in df_to_remarkup outputs.
+    df_requests_dummy = pd.DataFrame(
+        data={
+            "http_status": [200, 404, 305],
+            "total_requests": [975, 20, 2],
+            "percent_of_total": [97.5, 2, 0.5]
+        }
+    )
+
+    # Capture the output of df_to_remarkup print statements and test their values.
+    captured_output_1 = io.StringIO()
+    sys.stdout = captured_output_1
+    df_to_remarkup(df_requests_dummy)
+    output_str_1 = captured_output_1.getvalue().split("\n")[:-1]
+
+    # We have the default `index=True`, so the first value of row 0 should be the index value `0`.
+    assert output_str_1[2].split("|")[1].strip() == "0"
+    # We are not using floatfmt by default, so the percent in the second row should be the integer `2`.
+    assert output_str_1[3].split("|")[-2].strip() == "2"
+
+    captured_output_2 = io.StringIO()
+    sys.stdout = captured_output_2
+    df_to_remarkup(df_requests_dummy, index=False, floatfmt=(".0f", ".0f", ".1f"))
+    output_str_2 = captured_output_2.getvalue().split("\n")[:-1]
+
+    # We have `index=False`, so the first value of row 0 should be the `http_status` value `200`.
+    # It should also be `200` and not `200.0` as this column has been formatted to `.0f` using floatfmt.
+    assert output_str_2[2].split("|")[1].strip() == "200"
+    # floatfmt was used to round the third column to the first decimal place, so this percent should be `2.0`.
+    assert output_str_2[3].split("|")[-2].strip() == "2.0"
+
+    log_test_passed("utils.df_to_remarkup unit tests")
 
 def main():
     clean_tables()
@@ -208,8 +243,8 @@ def main():
     test_read_via_mariadb()
     test_silent_command_via_MariaDB()
     test_load_csv()
-
     test_sql_tuple()
+    test_df_to_remarkup()
 
     clean_tables()
 

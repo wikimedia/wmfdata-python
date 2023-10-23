@@ -86,33 +86,20 @@ def mediawiki_dt(dt):
     """
     return dt.strftime("%Y%m%d%H%M%S")
 
-def df_to_remarkup(df):
+def df_to_remarkup(df, **kwargs):
     """
-    Prints a Pandas dataframe as a Remarkup table suitable for pasting into
-    Phabricator.
+    Prints a Pandas dataframe as a Remarkup table suitable for pasting into Phabricator.
 
-    Best used via the `pipe` method, as in `my_dataframe.pipe(df_to_remarkup)`.
+    Note that among many kwargs the following are useful for editing the output:
+        index (bool): passing `False` removes the dataframe index (default is `True`)
+            Ex: `df_to_remarkup(df, index=False)`
 
-    Note that indexes are not currently supported, so if your index contains
-    something important, you should use call `my_dataframe.reset_index` first.
+        floatfmt (str or list(str)): the decimal place to round the outputs to
+            Ex: `df_to_remarkup(df, floatfmt=(".0f", ".1f"))` (round off first column and to first decimal in second)
+
+    See the options for pandas.DataFrame.to_markdown and the Python package tabulate for other kwargs.
     """
-    # To-do: allow printing indexes
-    col_count = len(df.columns)
-    header_sep = "| ----- " * col_count
-    psv_table = (
-        df
-        .to_csv(sep="|", index=False)
-        # Pad every pipe with spaces so the markup is easier to read
-        .replace("|", " | ")
-    )
-
-    # Add a pipe to the start of every line, before adding the header separator
-    # so it doesn't get a double first pipe
-    remarkup_table = re.sub(r"^([^|])", r"| \1", psv_table, flags=re.MULTILINE)
-    # Make the first row a header
-    remarkup_table = remarkup_table.replace("\n", "\n" + header_sep + "\n", 1)
-
-    print(remarkup_table)
+    print(df.to_markdown(tablefmt="pipe", **kwargs).replace(":", "-"))
 
 def check_remote_version(source_url, local_version):
     r = requests.get(source_url + "/raw/release/wmfdata/metadata.py", timeout=1)
