@@ -52,10 +52,10 @@ def insert_code_toggle():
     display(HTML("""
     <form action="javascript:code_toggle()">
         <input
-            id="code_toggle"
-            type="submit"
-            value="Hide code"
-            style="font-size: 1.4em"
+          id="code_toggle"
+          type="submit"
+          value="Hide code"
+          style="font-size: 1.4em"
         >
     </form>
 
@@ -88,15 +88,14 @@ def mediawiki_dt(dt):
 
 def df_to_remarkup(df, **kwargs):
     """
-    Prints a Pandas dataframe as a Remarkup table suitable for pasting into
-    Phabricator.
+    Prints a Pandas dataframe as a Remarkup table suitable for pasting into Phabricator.
 
     Note that among many kwargs the following are useful for editing the output:
         index (bool): passing `False` removes the dataframe index (default is `True`)
             Ex: `df_to_remarkup(df, index=False)`
 
-        floatfmt (str): the decimal place to round the outputs to
-            Ex: `df_to_remarkup(df, floatfmt=".1f")` to round to the first decimal place
+        floatfmt (str or list(str)): the decimal place to round the outputs to
+            Ex: `df_to_remarkup(df, floatfmt=(".0f", ".1f"))` (round off first column and to first decimal in second)
 
     See the options for pandas.DataFrame.to_markdown and the Python package tabulate for other kwargs.
     """
@@ -128,7 +127,7 @@ def check_kerberos_auth():
         )
     elif klist != 0:
         raise OSError(
-            "There was an unknown issue checking your Kerberos credentials."
+          "There was an unknown issue checking your Kerberos credentials."
         )
 
 def ensure_list(str_or_list):
