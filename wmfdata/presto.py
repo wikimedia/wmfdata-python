@@ -36,7 +36,7 @@ def run(commands, catalog="analytics_hive"):
         config="/etc/krb5.conf",
         service_name="presto",
         principal=f"{USER_NAME}@WIKIMEDIA",
-        ca_bundle="/etc/ssl/certs/Puppet_Internal_CA.pem"
+        ca_bundle="/etc/ssl/certs/wmf-ca-certificates.crt"
     )
 
     connection = prestodb.dbapi.connect(
