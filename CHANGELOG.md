@@ -1,3 +1,7 @@
+# Next
+* The CA bundle that is used for establishing a TLS connection with presto has been updated to the new combined bundle. This supports certificates signed by the
+legacy Puppet 5 built-in certificate authority, as well as the newer certificates signed by the WMF PKI system.
+
 # 2.0.1 (18 September 2023)
 * Urllib3 is now pinned below 2.0 to avoid errors when querying Presto ([T345309](https://phabricator.wikimedia.org/T345309)).
 * Matplotlib is no longer specified as a dependency, since the `charting` module was removed in 2.0.
