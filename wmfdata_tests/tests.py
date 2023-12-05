@@ -208,7 +208,7 @@ def test_df_to_remarkup():
     # Capture the output of df_to_remarkup print statements and test their values.
     captured_output_1 = io.StringIO()
     sys.stdout = captured_output_1
-    df_to_remarkup(df_requests_dummy)
+    wmf.utils.df_to_remarkup(df_requests_dummy)
     output_str_1 = captured_output_1.getvalue().split("\n")[:-1]
 
     # We have the default `index=True`, so the first value of row 0 should be the index value `0`.
@@ -218,7 +218,7 @@ def test_df_to_remarkup():
 
     captured_output_2 = io.StringIO()
     sys.stdout = captured_output_2
-    df_to_remarkup(df_requests_dummy, index=False, floatfmt=(".0f", ".0f", ".1f"))
+    wmf.utils.df_to_remarkup(df_requests_dummy, index=False, floatfmt=(".0f", ".0f", ".1f"))
     output_str_2 = captured_output_2.getvalue().split("\n")[:-1]
 
     # We have `index=False`, so the first value of row 0 should be the `http_status` value `200`.
