@@ -1,6 +1,7 @@
-# Next
+# 2.1.0 (5 December 2023)
 * The CA bundle that is used for establishing a TLS connection with presto has been updated to the new combined bundle. This supports certificates signed by the
 legacy Puppet 5 built-in certificate authority, as well as the newer certificates signed by the WMF PKI system.
+* Improve formatting of `df_to_remarkup`.
 
 # 2.0.1 (18 September 2023)
 * Urllib3 is now pinned below 2.0 to avoid errors when querying Presto ([T345309](https://phabricator.wikimedia.org/T345309)).
