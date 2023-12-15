@@ -1,3 +1,6 @@
+# next
+* Use a DNS lookup to ascertain which hostname is referenced by the analytics-presto.eqiad.wmnet CNAME and use this information when authenticatin client connections. This will facilitate migrating the coordinator role to new hosts ([T345482](https://phabricator.wikimedia.org/T345482)).
+
 # 2.2.0 (5 December 2023)
 * The CA bundle that is used for establishing a TLS connection with presto has been updated to the new combined bundle. This supports certificates signed by the
 legacy Puppet 5 built-in certificate authority, as well as the newer certificates signed by the WMF PKI system.
