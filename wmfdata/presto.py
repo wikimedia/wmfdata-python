@@ -1,6 +1,7 @@
 import os
 import warnings
 
+import dns.resolver
 import pandas as pd
 import prestodb
 from requests.packages import urllib3
@@ -10,10 +11,20 @@ from wmfdata.utils import (
     ensure_list
 )
 
+PRESTO_HOST = "analytics-presto.eqiad.wmnet"
+
 # Disable a warning issued by urllib3 because the certificate for an-coord1001.eqiad.wmnet
 # does not specify the hostname in the subjectAltName field (T158757)
 SubjectAltNameWarning = urllib3.exceptions.SubjectAltNameWarning
 urllib3.disable_warnings(SubjectAltNameWarning)
+
+
+def resolve_presto_host_cname():
+    dns_answers = dns.resolver.resolve(PRESTO_HOST, "CNAME")
+    if len(dns_answers.rrset) == 0:
+        return None
+    return dns_answers.rrset[0].to_text().rstrip('.')
+
 
 def run(commands, catalog="analytics_hive"):
     """
@@ -30,18 +41,20 @@ def run(commands, catalog="analytics_hive"):
     """
     commands = ensure_list(commands)
     check_kerberos_auth()
+    hostname_override = resolve_presto_host_cname()
 
     USER_NAME = os.getenv("USER")
     PRESTO_AUTH = prestodb.auth.KerberosAuthentication(
         config="/etc/krb5.conf",
         service_name="presto",
         principal=f"{USER_NAME}@WIKIMEDIA",
-        ca_bundle="/etc/ssl/certs/wmf-ca-certificates.crt"
+        ca_bundle="/etc/ssl/certs/wmf-ca-certificates.crt",
+        hostname_override=hostname_override,
     )
 
     connection = prestodb.dbapi.connect(
         catalog=catalog,
-        host="an-coord1001.eqiad.wmnet",
+        host=PRESTO_HOST,
         port=8281,
         http_scheme="https",
         user=USER_NAME,

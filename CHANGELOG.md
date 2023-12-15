@@ -1,3 +1,6 @@
+# next
+* Prepare for the switching of the kerberos principal and DNS name of the presto coordinator. In order to avoid a breaking change when we
+  make the switch, this change will cause prestodb.run to try to connect using the old name, but if that fails it will reconnect with the new name.
 # 2.2.0 (5 December 2023)
 * The CA bundle that is used for establishing a TLS connection with presto has been updated to the new combined bundle. This supports certificates signed by the
 legacy Puppet 5 built-in certificate authority, as well as the newer certificates signed by the WMF PKI system.
