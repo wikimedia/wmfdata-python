@@ -13,12 +13,6 @@ from wmfdata.utils import (
 
 PRESTO_HOST = "analytics-presto.eqiad.wmnet"
 
-# Disable a warning issued by urllib3 because the certificate for an-coord1001.eqiad.wmnet
-# does not specify the hostname in the subjectAltName field (T158757)
-SubjectAltNameWarning = urllib3.exceptions.SubjectAltNameWarning
-urllib3.disable_warnings(SubjectAltNameWarning)
-
-
 def resolve_presto_host_cname():
     dns_answers = dns.resolver.resolve(PRESTO_HOST, "CNAME")
     if len(dns_answers.rrset) == 0:
