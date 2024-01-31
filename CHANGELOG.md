@@ -1,10 +1,9 @@
-# next
-* Use a DNS lookup to ascertain which hostname is referenced by the analytics-presto.eqiad.wmnet CNAME and use this information when authenticatin client connections. This will facilitate migrating the coordinator role to new hosts ([T345482](https://phabricator.wikimedia.org/T345482)).
-* Remove the code that disabled hostname mismatch warnings in urllib3, as it is no longer required.
+# 2.3.0 (30 January 2024)
+* The `presto` module now follows the DNS alias `analytics-presto.eqiad.wmnet` to connect to the current Presto coordinator, rather than being hardcoded to connect to a particular coordinator. This allows Wmfdata to automatically adapt when the coordinator role is switched to a new server ([T345482](https://phabricator.wikimedia.org/T345482)).
+* The version pin and warning handling code for Urllib3 has been removed, thanks to the updated certificate bundle added in 2.2.0.
 
 # 2.2.0 (5 December 2023)
-* The CA bundle that is used for establishing a TLS connection with presto has been updated to the new combined bundle. This supports certificates signed by the
-legacy Puppet 5 built-in certificate authority, as well as the newer certificates signed by the WMF PKI system.
+* The CA bundle that is used for establishing a TLS connection with presto has been updated to the new combined bundle. This supports certificates signed by the legacy Puppet 5 built-in certificate authority, as well as the newer certificates signed by the WMF PKI system.
 * Improve formatting of `df_to_remarkup`.
 
 # 2.0.1 (18 September 2023)
