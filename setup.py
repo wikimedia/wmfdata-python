@@ -20,7 +20,6 @@ setup(
     install_requires=[
         "dnspython",
         "IPython",
-        "findspark",
         # This is the latest version which supports MariaDB Connector/C 3.1.16,
         # which is the version currently available on the analytics clients
         "mariadb==1.0.11",

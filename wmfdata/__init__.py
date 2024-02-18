@@ -11,21 +11,11 @@ from wmfdata import (
     spark
 )
 
-# Warn about the conda-analytics migration once it has almost certainly begun
-if conda.is_anaconda_wmf_env() and date.today() >= date(2022, 12, 12):
-    utils.print_err(
-        "You are using an anaconda-wmf environment.",
-        "You must switch to a conda-analytics environment by 31 March 2023.",
-        "For details, see https://wikitech.wikimedia.org/wiki/Analytics/Systems/Conda."
-    )
-
 try:
     remote = utils.check_remote_version(metadata.source, metadata.version)
 
     if remote['is_newer']:
         update_command = f"pip install --upgrade git+{metadata.source}.git@release"
-        if conda.is_anaconda_wmf_env():
-            update_command += " --ignore-installed"
 
         message = [
             f"You are using Wmfdata v{metadata.version}, but v{remote['version']} is available.",

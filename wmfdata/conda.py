@@ -62,37 +62,13 @@ def is_active():
     else:
         return True
 
-def is_stacked():
-    """
-    Returns True if a conda env active and stacked on a base conda env, else False.
-    """
-    if base_prefix() is None:
-        return False
-    else:
-        return True
-
-
-def is_anaconda_wmf_env():
-    """
-    Returns True if we detect that the conda environment is the deprecated anaconda-wmf.
-    False otherwise.
-    """
-    conda_location = info().get('conda_location', '')
-    return conda_location.startswith('/usr/lib/anaconda-wmf')
-
-
 def conda_base_env_prefix():
     """
-    Returns the path to the conda base env, which on WMF servers can be either
-    '/usr/lib/anaconda-wmf' or '/opt/conda-analytics'.
-    This can be overridden by setting the CONDA_BASE_ENV_PREFIX env var.
+    Returns the path to the conda base env, which on WMF servers is
+    '/opt/conda-analytics'. This can be overridden by setting the CONDA_BASE_ENV_PREFIX
+    env var.
     """
-    if is_anaconda_wmf_env():
-        conda_base_env_prefix_default = '/usr/lib/anaconda-wmf'
-    else:
-        conda_base_env_prefix_default = '/opt/conda-analytics'
-
-    return os.environ.get("CONDA_BASE_ENV_PREFIX", conda_base_env_prefix_default)
+    return os.environ.get("CONDA_BASE_ENV_PREFIX", "/opt/conda-analytics")
 
 
 def pack(**conda_pack_kwargs):
