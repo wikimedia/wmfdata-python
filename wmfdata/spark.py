@@ -1,31 +1,20 @@
 from typing import List, Union
 import os
 
-import findspark
 import pandas as pd
+import pyspark
+from pyspark import SparkContext
+from pyspark.sql import SparkSession
+import py4j
 
 from wmfdata import conda
 from wmfdata.utils import (
     check_kerberos_auth,
     ensure_list,
+    print_err,
     python_version
 )
 
-
-if conda.is_anaconda_wmf_env():
-    default_spark = "/usr/lib/spark2"
-else:
-    default_spark = "/usr/lib/spark3"
-SPARK_HOME = os.environ.get("SPARK_HOME", default_spark)
-
-# This is not necessary in a conda-analytics environment. Once we stop supporting anaconda-wmf
-# environments, we can drop this line and the dependency on findspark.
-findspark.init(SPARK_HOME)
-
-import pyspark
-from pyspark import SparkContext
-from pyspark.sql import SparkSession
-import py4j
 
 """
 Predefined spark sessions and configs for use with the get_session and run functions.
@@ -76,23 +65,17 @@ ENV_VARS_TO_PROPAGATE = [
 
 def get_active_session():
     """
-    Returns the active session if there is one and None otherwise.
+    DEPRECATED: Returns the active session if there is one and None otherwise.
 
-    Spark 3 includes a native getActiveSession function. Once we end Spark 2
-    support, we can switch to that.
+    This is a holdover from before Spark 3, when there was no native getActiveSession function.
     """
-    try:
-        if SparkContext._jvm.SparkSession.active():
-            return SparkSession.builder.getOrCreate()
-        else:
-            return None
-    except (
-        # If a session has never been started
-        AttributeError,
-        # If the most recent session was stopped
-        py4j.protocol.Py4JJavaError
-    ):
-        return None
+    print_err(
+        "get_active_session has been deprecated and will be removed in the next major version. "
+        "Use pyspark.sql.SparkSession.getActiveSession instead."
+    )
+
+    return SparkSession.getActiveSession()
+
 
 def create_custom_session(
     master="local[2]",
@@ -110,9 +93,9 @@ def create_custom_session(
     Arguments:
     * `master`: passed to SparkSession.builder.master()
       If this is "yarn" and and a conda env is active and and ship_python_env=False,
-      remote executors will be configured to use conda.conda_base_env_prefix(),
-      which for Spark 2 defaults to anaconda-wmf and for Spark 3 defalts to conda-analytics.
-      This should usually work as both are installed on all WMF YARN worker nodes.
+      remote executors will be configured to use conda.conda_base_env_prefix(). This
+      defaults to 'opt/conda-analytics', which should be installed on all analytics cluster
+      worker nodes.
       If your conda environment has required packages installed that are not in those, set
       ship_python_env=True.
     * `app_name`: passed to SparkSession.builder.appName().
@@ -129,7 +112,7 @@ def create_custom_session(
     """
     check_kerberos_auth()
 
-    session = get_active_session()
+    session = SparkSession.getActiveSession()
     if session:
         session.stop()
 
@@ -164,7 +147,7 @@ def create_custom_session(
 
             # Workers should use python from the unpacked conda env.
             os.environ["PYSPARK_PYTHON"] = f"{conda_packed_name}/bin/python3"
-        # Else if conda is active, use the conda_base_env_prefix
+        # Else if conda is active, use the Python in the standard Conda
         # environment, as this should exist on all worker nodes.
         elif conda.is_active():
             os.environ["PYSPARK_PYTHON"] = os.path.join(
@@ -177,9 +160,6 @@ def create_custom_session(
         # (e.g. python3.7) is installed in the system.
         elif os.path.isfile(os.path.join(f"/usr/bin/python{python_version()}")):
             os.environ["PYSPARK_PYTHON"] = f"/usr/bin/python{python_version()}"
-
-    # NOTE: We don't need to touch PYSPARK_PYTHON if master != yarn.
-    # The default set by findspark will be fine.
 
     builder = (
         SparkSession.builder
@@ -272,7 +252,7 @@ def run(commands: Union[str, List[str]]) -> pd.DataFrame:
 
     commands = ensure_list(commands)
 
-    session = get_active_session()
+    session = SparkSession.getActiveSession()
     if not session:
         session = create_session() 
 

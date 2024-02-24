@@ -1,3 +1,6 @@
+# Next
+* `spark.get_active_session` has been deprecated, since we are now using Spark 3, which has an equivalent built-in function, `pyspark.sql.SparkSession.getActiveSession`.
+
 # 2.3.0 (30 January 2024)
 * The `presto` module now follows the DNS alias `analytics-presto.eqiad.wmnet` to connect to the current Presto coordinator, rather than being hardcoded to connect to a particular coordinator. This allows Wmfdata to automatically adapt when the coordinator role is switched to a new server ([T345482](https://phabricator.wikimedia.org/T345482)).
 * The version pin and warning handling code for Urllib3 has been removed, thanks to the updated certificate bundle added in 2.2.0.

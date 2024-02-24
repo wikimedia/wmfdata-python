@@ -6,6 +6,8 @@ from pathlib import Path
 import re
 import sys
 
+from pyspark.sql import SparkSession
+
 import pandas as pd
 import wmfdata as wmf
 
@@ -123,11 +125,11 @@ def test_silent_command_via_hive():
 def test_spark_session_apis():
     # once create_session() is called, we should be able to retrieve it via get_active_session()
     s1 = wmf.spark.create_session(type="local", app_name="wmfdata-test-session-api-1")
-    assert wmf.spark.get_active_session() is s1
+    assert SparkSession.getActiveSession() is s1
     # a later call to create_session() closes any previous session and returns a new one
     s2 = wmf.spark.create_session(type="local", app_name="wmfdata-test-session-api-2")
     assert s1 is not s2
-    assert wmf.spark.get_active_session() is s2
+    assert SparkSession.getActiveSession() is s2
     # clean up
     s2.stop()
     log_test_passed("Spark Session APIs")
