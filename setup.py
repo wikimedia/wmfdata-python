@@ -20,8 +20,10 @@ setup(
     install_requires=[
         "dnspython",
         "IPython",
-        # This is the latest version which supports MariaDB Connector/C 3.1.16,
-        # which is the version currently available on the analytics clients
+        # The next version of the Mariadb Python connector (1.1.0) increases the required C connector
+        # version to 3.2.4 (https://mariadb.com/kb/en/mariadb-connector-python-110-alpha1-release-notes/).
+        # As of May 2024, we are running MariaDB 10.5.23, which includes C Connector 3.1.23
+        # (https://mariadb.com/kb/en/list-of-mariadb-connector-c-releases/).
         "mariadb==1.0.11",
         # Pandas 1.0 is the the first to support None as a value for
         # `display.max_colwidth`
