@@ -54,8 +54,14 @@ def run(commands):
 
 
 def load_csv(
-    path, field_spec, db_name, table_name,
-    create_db=False, sep=",", headers=True
+    path,
+    field_spec,
+    db_name,
+    table_name,
+    create_db=False,
+    sep=",",
+    backslash_escaping=False,
+    headers=True
 ):
     """
     Upload a CSV (or other delimiter-separated value file) to Data Lake's HDFS,
@@ -68,9 +74,28 @@ def load_csv(
     To prevent errors caused by typos, the function will not try to create the
     database first unless `create_db=True` is passed.
 
+    `sep` allows specifying a different separator character than the comma.
+    For example, pass "\t" to load a TSV file.
+
+    `backslash_escaping` directs Hive to interpret the backslash as an escape
+    sequence. This works for escaping commas in CSVs and tabs in TSVs, but
+    not for newlines. Hive still interprets an escaped newline as starting
+    a new record.
+
     `headers` gives whether the file has a header row; if it does, the
     function strips it before uploading, because Hive treats all rows as
     data rows.
+
+    NOTE: Hive cannot handle CSVs with quoted values, which is the default way
+    of handling special characters for, among others, Pandas. One workaround is
+    to load a TSV instead (by passing `sep="\t"`).
+
+    You can also write your CSV using backslash escaping rather than quoting.
+    In Pandas, you can do this with:
+    `df.to_csv("df.csv", quoting=csv.QUOTE_NONE, escapechar="\\")`.
+
+    Then, load the resulting CSV using this function with
+    `backslash_escaping=True`.
     """
 
     create_db_cmd = """
@@ -83,7 +108,9 @@ def load_csv(
 
     create_table_cmd = """
     CREATE TABLE {db_name}.{table_name} ({field_spec})
-    ROW FORMAT DELIMITED FIELDS TERMINATED BY "{sep}"
+    ROW FORMAT DELIMITED
+    FIELDS TERMINATED BY "{sep}"
+    {escaping_clause}
     STORED AS TEXTFILE
     """
 
@@ -106,12 +133,18 @@ def load_csv(
         subprocess.run(["hdfs", "dfs", "-mkdir", "-p", hdfs_path])
         subprocess.run(["hdfs", "dfs", "-put", path, hdfs_path])
 
+        if backslash_escaping:
+            escaping_clause = f'ESCAPED by "\\\\"'
+        else:
+            escaping_clause = ""
+
         cmd_params = {
             "db_name": db_name,
             "field_spec": field_spec,
             # To do: Convert relative paths (e.g. "~/data.csv") into absolute paths
             "path": hdfs_path,
             "sep": sep,
+            "escaping_clause": escaping_clause,
             "table_name": table_name
         }
 
