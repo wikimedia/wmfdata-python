@@ -11,14 +11,16 @@ from wmfdata import (
     spark
 )
 
+__version__ = metadata.version
+
 try:
-    remote = utils.check_remote_version(metadata.source, metadata.version)
+    remote = utils.check_remote_version(metadata.source, __version__)
 
     if remote['is_newer']:
         update_command = f"pip install --upgrade git+{metadata.source}.git@release"
 
         message = [
-            f"You are using Wmfdata v{metadata.version}, but v{remote['version']} is available.",
+            f"You are using Wmfdata v{__version__}, but v{remote['version']} is available.",
             f"To update, run `{update_command}`.",
             f"To see the changes, refer to {metadata.source}/blob/release/CHANGELOG.md.",
         ]
