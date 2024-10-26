@@ -1,6 +1,7 @@
 # Next
 * `spark.get_active_session` has been deprecated, since we are now using Spark 3, which has an equivalent built-in function, `pyspark.sql.SparkSession.getActiveSession`.
 * This package now complies with [PEP-517](https://peps.python.org/pep-0517/) and [PEP-518](https://peps.python.org/pep-0518/) by specifying its build system in `pyproject.toml`.
+* The package version is now available at runtime from the `__version__` attribute.
 
 # 2.3.0 (30 January 2024)
 * The `presto` module now follows the DNS alias `analytics-presto.eqiad.wmnet` to connect to the current Presto coordinator, rather than being hardcoded to connect to a particular coordinator. This allows Wmfdata to automatically adapt when the coordinator role is switched to a new server ([T345482](https://phabricator.wikimedia.org/T345482)).
