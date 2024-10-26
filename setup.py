@@ -18,6 +18,7 @@ setup(
         "Wikimedia data"
     ),
     install_requires=[
+        "conda-pack",
         "dnspython",
         "IPython",
         # The next version of the Mariadb Python connector (1.1.0) increases the required C connector
