@@ -65,15 +65,8 @@ ENV_VARS_TO_PROPAGATE = [
 
 def get_active_session():
     """
-    DEPRECATED: Returns the active session if there is one and None otherwise.
-
-    This is a holdover from before Spark 3, when there was no native getActiveSession function.
+    Returns the active session if there is one and None otherwise.
     """
-    print_err(
-        "get_active_session has been deprecated and will be removed in the next major version. "
-        "Use pyspark.sql.SparkSession.getActiveSession instead."
-    )
-
     return SparkSession.getActiveSession()
 
 
@@ -112,7 +105,7 @@ def create_custom_session(
     """
     check_kerberos_auth()
 
-    session = SparkSession.getActiveSession()
+    session = get_active_session()
     if session:
         session.stop()
 
@@ -252,7 +245,7 @@ def run(commands: Union[str, List[str]]) -> pd.DataFrame:
 
     commands = ensure_list(commands)
 
-    session = SparkSession.getActiveSession()
+    session = get_active_session()
     if not session:
         session = create_session() 
 
