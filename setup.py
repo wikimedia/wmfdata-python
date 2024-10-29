@@ -36,6 +36,8 @@ setup(
         "requests_kerberos",
         "presto-python-client",
         "pyhive[hive]",
+        # Used by Pandas's df.to_markdown, which is called in utils.df_to_remarkup
+        "tabulate",
         "urllib3"
     ],
     packages=find_packages(),
