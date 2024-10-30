@@ -3,19 +3,20 @@ import pwd
 import tempfile
 import pandas as pd
 import subprocess
-import warnings
 
 from pyhive import hive
 from shutil import copyfileobj
 from wmfdata.utils import (
     check_kerberos_auth,
-    ensure_list
+    ensure_list,
+    suppress_pandas_dbapi_warning
 )
 
 HIVE_URL = "analytics-hive.eqiad.wmnet"
 KERBEROS_SERVICE_NAME = "hive"
 
 
+@suppress_pandas_dbapi_warning
 def run(commands):
     """
     Runs SQL commands against the Hive tables in the Data Lake.
@@ -42,16 +43,9 @@ def run(commands):
     with hive.connect(**connect_kwargs) as conn:
         for command in commands:
             try:
-                with warnings.catch_warnings():
-                    # Pandas officially does not support using arbitrary DB-API 2.0 drivers
-                    # like PyHive. However, in reality, it works fine, so we just suppress the
-                    # warning. See T324135 for more details.
-                    message="pandas only supports SQLAlchemy connectable"
-                    warnings.filterwarnings("ignore", category=UserWarning, message=message)
-
-                    # this will work when the command is a SQL query
-                    # so the last query in `commands` will return its results
-                    response = pd.read_sql(command, conn)
+                # this will work when the command is a SQL query
+                # so the last query in `commands` will return its results
+                response = pd.read_sql(command, conn)
             except TypeError:
                 # The weird thing here is the command actually runs,
                 # Pandas just has trouble when trying to read the result

@@ -2,13 +2,12 @@ import atexit
 import getpass
 import grp
 import subprocess
-import warnings
 
 import mariadb
 from mariadb.constants import FIELD_TYPE
 import pandas as pd
 
-from wmfdata.utils import ensure_list
+from wmfdata.utils import ensure_list, suppress_pandas_dbapi_warning
 
 
 # Set up converter for binary data
@@ -90,6 +89,7 @@ def connect(db, use_x1=False):
     return connection
 
 # To-do: provide an easy way to get lists of wikis
+@suppress_pandas_dbapi_warning
 def run(
   commands, dbs, use_x1=False, format="pandas", date_col=None,
   index_col=None
@@ -140,20 +140,14 @@ def run(
         # Pandas's complex SQL machinery.
         for command in commands:
             try:
-                with warnings.catch_warnings():
-                    # Pandas officially does not support using arbitrary DB-API 2.0 drivers
-                    # like MariaDB Connector/Python. However, in reality, it works fine, so
-                    # we just suppress the warning. See T324135 for more details.
-                    message="pandas only supports SQLAlchemy connectable"
-                    warnings.filterwarnings("ignore", category=UserWarning, message=message)
-                    result = pd.read_sql_query(
-                        command,
-                        connection,
-                        index_col=index_col,
-                        parse_dates=date_col
-                    )
-            # pandas will encounter a TypeError with DDL (e.g. CREATE TABLE) or
-            # DML (e.g. INSERT) statements
+                result = pd.read_sql_query(
+                    command,
+                    connection,
+                    index_col=index_col,
+                    parse_dates=date_col
+                )
+                # pandas will encounter a TypeError with DDL (e.g. CREATE TABLE) or
+                # DML (e.g. INSERT) statements
             except TypeError:
                 pass
 
