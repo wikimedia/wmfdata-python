@@ -2,6 +2,7 @@ import atexit
 import getpass
 import grp
 import subprocess
+import warnings
 
 import mariadb
 from mariadb.constants import FIELD_TYPE
@@ -139,12 +140,15 @@ def run(
         # Pandas's complex SQL machinery.
         for command in commands:
             try:
-                result = pd.read_sql_query(
-                    command,
-                    connection,
-                    index_col=index_col,
-                    parse_dates=date_col
-                )
+                with warnings.catch_warnings():
+                    message="pandas only supports SQLAlchemy connectable"
+                    warnings.filterwarnings("ignore", category=UserWarning, message=message)
+                    result = pd.read_sql_query(
+                        command,
+                        connection,
+                        index_col=index_col,
+                        parse_dates=date_col
+                    )
             # pandas will encounter a TypeError with DDL (e.g. CREATE TABLE) or
             # DML (e.g. INSERT) statements
             except TypeError:

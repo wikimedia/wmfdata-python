@@ -3,6 +3,7 @@ import pwd
 import tempfile
 import pandas as pd
 import subprocess
+import warnings
 
 from pyhive import hive
 from shutil import copyfileobj
@@ -43,7 +44,10 @@ def run(commands):
             try:
                 # this will work when the command is a SQL query
                 # so the last query in `commands` will return its results
-                response = pd.read_sql(command, conn)
+                with warnings.catch_warnings():
+                    message="pandas only supports SQLAlchemy connectable"
+                    warnings.filterwarnings("ignore", category=UserWarning, message=message)
+                    response = pd.read_sql(command, conn)
             except TypeError:
                 # The weird thing here is the command actually runs,
                 # Pandas just has trouble when trying to read the result
