@@ -141,6 +141,9 @@ def run(
         for command in commands:
             try:
                 with warnings.catch_warnings():
+                    # Pandas officially does not support using arbitrary DB-API 2.0 drivers
+                    # like MariaDB Connector/Python. However, in reality, it works fine, so
+                    # we just suppress the warning. See T324135 for more details.
                     message="pandas only supports SQLAlchemy connectable"
                     warnings.filterwarnings("ignore", category=UserWarning, message=message)
                     result = pd.read_sql_query(

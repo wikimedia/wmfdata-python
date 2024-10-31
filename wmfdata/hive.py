@@ -42,11 +42,15 @@ def run(commands):
     with hive.connect(**connect_kwargs) as conn:
         for command in commands:
             try:
-                # this will work when the command is a SQL query
-                # so the last query in `commands` will return its results
                 with warnings.catch_warnings():
+                    # Pandas officially does not support using arbitrary DB-API 2.0 drivers
+                    # like PyHive. However, in reality, it works fine, so we just suppress the
+                    # warning. See T324135 for more details.
                     message="pandas only supports SQLAlchemy connectable"
                     warnings.filterwarnings("ignore", category=UserWarning, message=message)
+
+                    # this will work when the command is a SQL query
+                    # so the last query in `commands` will return its results
                     response = pd.read_sql(command, conn)
             except TypeError:
                 # The weird thing here is the command actually runs,
