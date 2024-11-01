@@ -4,6 +4,7 @@ import os.path
 import re
 import subprocess
 import sys
+import warnings
 
 from IPython.display import HTML
 from packaging.version import Version
@@ -40,6 +41,19 @@ def pd_display_all(df):
         "display.max_colwidth", None
     ):
         display(df)
+
+def suppress_pandas_dbapi_warning(fn):
+    """
+    Pandas officially does not support using arbitrary DB-API 2.0 drivers
+    like MariaDB Connector/Python. However, in reality, it works fine, so
+    we just suppress the warning. See T324135 for more details.
+    """
+    def suppressed(*args, **kwargs):
+        with warnings.catch_warnings():
+            message="pandas only supports SQLAlchemy connectable"
+            warnings.filterwarnings("ignore", category=UserWarning, message=message)
+            return fn(*args, **kwargs)
+    return suppressed
 
 def insert_code_toggle():
     """
