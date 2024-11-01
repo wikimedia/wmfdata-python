@@ -38,8 +38,16 @@ setup(
         "pyhive[hive]",
         # Used by Pandas's df.to_markdown, which is called in utils.df_to_remarkup
         "tabulate",
+	# Used to run tests
+        "tox",
         "urllib3"
     ],
+    extras_require={ 'tests': [
+        "pyspark",
+        "pytest",
+        "pytest-pep8",
+        "pytest-cov",
+    ] },
     packages=find_packages(),
     python_requires=">=3",
     url=metadata["source"],
