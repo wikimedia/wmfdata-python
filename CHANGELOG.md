@@ -1,7 +1,9 @@
-# Next
-* This package now complies with [PEP-517](https://peps.python.org/pep-0517/) and [PEP-518](https://peps.python.org/pep-0518/) by specifying its build system in `pyproject.toml`.
-* The package version is now available at runtime from the `__version__` attribute.
-* [Conda-Pack](https://conda.github.io/conda-pack/) (used in the `conda` module) and [Tabulate](https://github.com/astanin/python-tabulate) (used in `utils.df_to_remarkup`) are now properly specified as a dependencies.
+# 2.4.0 (4 November 2024)
+* The official code repository has been moved from [GitHub](https://github.com/wikimedia/wmfdata-python) to [Wikimedia GitLab](https://gitlab.wikimedia.org/repos/data-engineering/wmfdata-python) ([T304544](https://phabricator.wikimedia.org/T304544)).
+* The annoying Pandas warning triggered by `mariadb.run` and `hive.run` has been suppressed ([T324135](https://phabricator.wikimedia.org/T324135)).
+* Setuptools is now specified as the build system in `pyproject.toml`, complying with [PEP-517](https://peps.python.org/pep-0517/) and [PEP-518](https://peps.python.org/pep-0518/) ([T378254](https://phabricator.wikimedia.org/T378254)).
+* The package version is now available at runtime from the `__version__` attribute ([T356708](https://phabricator.wikimedia.org/T356708))
+* [Conda-Pack](https://conda.github.io/conda-pack/) (used in the `conda` module) and [Tabulate](https://github.com/astanin/python-tabulate) (used in `utils.df_to_remarkup`) are now properly specified as dependencies ([T370718](https://phabricator.wikimedia.org/T370718), [T378430](https://phabricator.wikimedia.org/T378430)).
 
 # 2.3.0 (30 January 2024)
 * The `presto` module now follows the DNS alias `analytics-presto.eqiad.wmnet` to connect to the current Presto coordinator, rather than being hardcoded to connect to a particular coordinator. This allows Wmfdata to automatically adapt when the coordinator role is switched to a new server ([T345482](https://phabricator.wikimedia.org/T345482)).
