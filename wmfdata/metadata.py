@@ -4,4 +4,4 @@
 # installed.
 
 source = "https://gitlab.wikimedia.org/repos/data-engineering/wmfdata-python"
-version = "2.3.0"
+version = "2.4.0"
