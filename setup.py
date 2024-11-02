@@ -14,8 +14,8 @@ setup(
     name="wmfdata",
     version=metadata["version"],
     description=(
-        "Tools for analyzing data on SWAP, a platform for confidential "
-        "Wikimedia data"
+        "Python tools for accessing and analyzing data on Wikimedia's"
+        "non-public analytics clients"
     ),
     install_requires=[
         "conda-pack",
@@ -43,7 +43,6 @@ setup(
     packages=find_packages(),
     python_requires=">=3",
     url=metadata["source"],
-    author="Wikimedia Foundation Product Analytics team",
-    author_email="product-analytics@wikimedia.org",
+    author="Wikimedia Foundation",
     license="BSD 3-Clause"
 )

@@ -16,12 +16,16 @@ Wmfdata comes preinstalled in the [Conda environments used on the analytics clie
 
 To upgrade to a newer version, use:
 ```
-pip install --upgrade git+https://github.com/wikimedia/wmfdata-python.git@release
+pip install --upgrade git+https://gitlab.wikimedia.org/repos/data-engineering/wmfdata-python.git@release
 ```
 
 ## Support and maintenance 
 Tasks related to Wmfdata are tracked in Wikimedia Phabricator in the [Wmfdata-Python project](https://phabricator.wikimedia.org/project/profile/4627/). The best starting place is the [backlog in priority order](https://phabricator.wikimedia.org/maniphest/query/f9Q6SKeGTAn_/#R).
 
-The Wikimedia Foundation's [Movement Insights](https://meta.wikimedia.org/wiki/Movement_Insights) and [Data Products](https://www.mediawiki.org/wiki/Data_Platform_Engineering/Data_Products) teams are joint [code stewards](https://www.mediawiki.org/wiki/Code_Stewardship) of Wmfdata. Data Products is the ultimate steward of the data access and analytics infrastructure interface portions, while Movement Insights is ultimate steward of the analyst ergonomics portions. The current [maintainers](https://www.mediawiki.org/wiki/Developers/Maintainers) of Wmfdata are [nshahquinn](https://github.com/nshahquinn), [ottomata](https://github.com/ottomata), [milimetric](https://github.com/milimetric/), [nettrom](https://github.com/nettrom/), and [xabriel](https://github.com/xabriel).
+The Wikimedia Foundation's [Movement Insights](https://meta.wikimedia.org/wiki/Movement_Insights) and [Data Products](https://www.mediawiki.org/wiki/Data_Platform_Engineering/Data_Products) teams are joint [code stewards](https://www.mediawiki.org/wiki/Code_Stewardship) of Wmfdata. Data Products is the ultimate steward of the data access and analytics infrastructure interface portions, while Movement Insights is ultimate steward of the analyst ergonomics portions.
 
-If you're a hero who would like to contribute code, we welcome [pull requests here on GitHub](/pulls).
+The current maintainers of Wmfdata are:
+- @nshahquinn-wmf
+- @xcollazo
+
+If you're a hero who would like to contribute code, we welcome [merge requests](../../merge_requests)!
