@@ -1,3 +1,8 @@
+> [!IMPORTANT]
+> This repository has **moved to [gitlab.wikimedia.org/repos/data-engineering/wmfdata-python](https://gitlab.wikimedia.org/repos/data-engineering/wmfdata-python)**.
+>
+> Unless you are developing Wmfdata, you just need to continue to upgrade whenever Wmfdata prints a notice, using the `pip` command included in the notice.
+
 `wmfdata` is an Python package for analyzing Wikimedia data on Wikimedia's [non-public](https://wikitech.wikimedia.org/wiki/Analytics/Data_access#Production_access) [analytics clients](https://wikitech.wikimedia.org/wiki/Analytics/Systems/Clients).
 
 ## Features
